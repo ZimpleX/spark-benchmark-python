@@ -3,7 +3,7 @@
     * Logistic Regression in neural network training
     * ...
 
-## COntent
+## Content
 * `submit-to-spark.sh`: wrapper of `spark-submit` script inside `Spark` dir
     * renaming existing log files: as `1.out`, `2.out`, ... `n.out` in chronological order
     * all log files are read-only: ensure that chronological orde won't mess up
