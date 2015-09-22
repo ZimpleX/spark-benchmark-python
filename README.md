@@ -2,6 +2,7 @@
 * The characteristics of these benchmarks are heavy MapReduce operations, including:
     * Logistic Regression in neural network training
     * ...
+
 ## Dir structure
 * `submit-to-spark.sh`: wrapper of `spark-submit` script inside `Spark` dir
     * renaming existing log files: as `1.out`, `2.out`, ... `n.out` in chronological order
