@@ -82,7 +82,7 @@ def actByLog(xList, weight):
 
 
 if __name__ == "__main__":
-    data = Data(os.path.join(os.path.dirname(__file__), "test-data.txt"), sc)
+    data = Data(os.path.join(os.path.dirname(__file__), "test-data.ignore.txt"), sc)
     # TODO: should put persist here or in Data.setupDataVector ??
     data.pts.persist()
     conf = Conf(len(data.pts.first()[1]), itrMax=100)
