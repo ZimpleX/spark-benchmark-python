@@ -9,6 +9,17 @@ launch_dir="`pwd`"
 log_dir=$launch_dir"/../bm-log/LogReg/"
 spark_dir=$launch_dir"/../spark-1.5.0-bin-hadoop2.6/"
 
+if [ ! -d "$launch_dir/../bm-log" ]
+then
+    echo "created log dir: $launch_dir/../bm-log"
+    mkdir $launch_dir/../bm-log
+fi
+if [ ! -d "$launch_dir/../bm-log/LogReg" ]
+then
+    echo "created log dir: $launch_dir/../bm-log/LogReg"
+    mkdir $launch_dir/../bm-log/LogReg
+fi
+
 #################
 cd $log_dir     #
 #################
