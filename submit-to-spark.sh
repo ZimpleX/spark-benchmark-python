@@ -45,7 +45,7 @@ count="`ls -ltr | wc -l`"
 #################
 cd $spark_dir   #
 #################
-./bin/spark-submit $launch_dir/benchmark-LogReg/LogisticRegression.py | tee $log_dir/$count".out"
+./bin/spark-submit $launch_dir/LogReg/LogisticRegression.py | tee $log_dir/$count".out"
 
 chmod 444 $log_dir/*
 

@@ -17,9 +17,9 @@
 ```
 project
 |
-`-- benchmark/
+`-- benchmark-python/
 |   |
-|   `-- benchmark-LogReg/
+|   `-- LogReg/
 |   |
 |   `-- ...
 |
