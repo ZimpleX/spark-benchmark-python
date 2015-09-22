@@ -12,8 +12,13 @@ import operator as op
 import os
 
 sc = SparkContext(appName="logistic regression v0")
-sc.addPyFile(os.path.join(os.path.dirname(__file__), "CalcFunc.py"))
-
+sc.addPyFile(os.path.join(os.path.dirname(__file__), "util/CalcFunc.py"))
+"""
+Take a note of this!!!
+you don't need to import util.CalcFunc, cuz even though CalcFunc is in util dir originally,
+Spark will put it in the same dir as this file when it "fetches" all required files
+==> essentially, all files are at the same level before main function is actually executed.
+"""
 import CalcFunc as cf
 
 class Conf(tuple):

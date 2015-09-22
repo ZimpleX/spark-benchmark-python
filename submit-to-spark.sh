@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eu
 # policy for logging:
 # read-only
 # and do renaming every time, based on the file creation time (newer file gets larger index)
@@ -45,6 +46,8 @@ count="`ls -ltr | wc -l`"
 #################
 cd $spark_dir   #
 #################
+#./sbin/start-master.sh
+#./sbin/start-slaves.sh 
 ./bin/spark-submit $launch_dir/LogReg/LogisticRegression.py | tee $log_dir/$count".out"
 
 chmod 444 $log_dir/*
