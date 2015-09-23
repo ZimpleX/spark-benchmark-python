@@ -9,16 +9,19 @@ from pyspark import SparkContext
 import numpy as np
 import operator as op
 import os
+import argparse
 
 sc = SparkContext(appName="logistic regression v0")
 sc.addPyFile(os.path.join(os.path.dirname(__file__), "util/CalcFunc.py"))
+sc.addPyFile(os.path.join(os.path.dirname(__file__), "share/conf.py"))
 """
 Take a note of this!!!
-you don't need to import util.CalcFunc, cuz even though CalcFunc is in util dir originally,
-Spark will put it in the same dir as this file when it "fetches" all required files
+you don't need to import util.CalcFunc (just do `import CalcFunc`), cuz even though CalcFunc is in 
+util dir originally, Spark will put it in the same dir as this file when it "fetches" all required files
 ==> essentially, all files are at the same level before main function is actually executed.
 """
 import CalcFunc as cf
+from conf import trainingDirName, dataSetSizeStart
 
 class Conf(tuple):
     """
@@ -34,7 +37,7 @@ class Conf(tuple):
     __slots__ = []
     # not sure if this is the best way to make it immutable
     def __new__(cls, wLen, wInit=[], tInit=0, learnRate=0.01, itrMax=1000):
-        assert itrMax > 0 and wLen > 0
+        assert itrMax > 0 and wLen > 0 and learnRate > 0
         wInit = [float(x) for x in wInit]
         selfWInit = np.array(len(wInit) and wInit or ([0.0] * wLen))
         selfTInit = tInit
@@ -79,11 +82,29 @@ class Data:
                 np.array([float(x[i + 1]) for i in range(len(x) - 1)])])
 
 
+def parseArg():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file', type=str, metavar='PATHTODATASET',
+            required=True, help="file name of training data set")
+    parser.add_argument('-i', '--iteration', type=int, metavar='ITR',
+            default=100, help="max num of itr to do the log reg")
+    parser.add_argument('-w', '-weight', type=float, metavar='W',
+            default=0., help='initial weight')
+    parser.add_argument('-b', '-bias', type=float, metavar='B',
+            default=0., help='initial bias (threshold)')
+    parser.add_argument('-r', '--rate', type=float, metavar='R',
+            default=0.01, help='learning rate for updating weight')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    data = Data(os.path.join(os.path.dirname(__file__), "test-data.ignore.txt"), sc)
+    args = parseArg()
+    data = Data(os.path.join(os.path.dirname(__file__), args.file), sc)
     # TODO: should put persist here or in Data.setupDataVector ??
     data.pts.persist()
-    conf = Conf(len(data.pts.first()[1]), itrMax=100)
+    wLen = len(data.pts.first()[1])
+    conf = Conf(wLen, wInit=[args.weight]*wLen, tInit=args.bias,
+            learnRate=args.rate, itrMax=args.iteration)
 
     print("first data point is:")
     print(data.pts.first())
