@@ -1,0 +1,23 @@
+benchmark of logistic regression:
+=================================
+
+--  two separate high level scripts:
+    --  LogisticRegression.py
+    --  DataGen.py
+
+------------------------------------
+
+--  LogisticRegression.py:
+    --  the actual benchmark: MapReduce on cluster happens here
+
+--  DataGen.py:
+    --  the data-set generator script: generate different sizes of data-set files, using user-specified generator function
+
+--  setup.py:
+    --  originally intended for python distutil to generate .egg archive, not used now
+
+--  share/
+    --  folder contains settings common to both LogisticRegression.py and DataGen.py, such as data-set file path ...
+
+--  util/
+    --  utility functions used by LogisticRegression.py and DataGen.py
