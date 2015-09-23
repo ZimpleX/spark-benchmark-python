@@ -11,13 +11,26 @@ from util.EmbedScript import runScript, ScriptException
 from util.TrainingFunc import trainingFunc
 from random import uniform
 import os
+import argparse
 
 dataSetSizeStart = 3
 
+def parseArg():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-is", "--input_size", type=int, metavar='M', choices=range(1, 11), default=3, help="specify the num of input to the neuron")
+    parser.add_argument("-ds", "--data_size", type=int, metavar='N', choices=range(3, 15), default=12, help="specify the size of data set (in terms of 2^N)")
+    parser.add_argument("-f", "--function", type=str, choices=['AttenSin', 'Random'], default='AttenSin', help="Specify the training function to gen the data set")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    taskName = 'AttenSin'
-    inputSize = 3
-    dataSetSize = 13
+    ####################
+    #    parse args    #
+    ####################
+    args = parseArg()
+    taskName = args.function
+    inputSize = args.input_size
+    dataSetSize = args.data_size
     assert inputSize > 0 and inputSize <= 10
     assert dataSetSize <= 14 and dataSetSize >= 3
     #################################
