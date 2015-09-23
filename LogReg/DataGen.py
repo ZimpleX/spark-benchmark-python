@@ -4,7 +4,7 @@ it uses a mix of shell script and python script, as i think shell script is
 more concise with regard to directory formatting
 
 also note that the policy regarding data set is:
-    never overweite a data set file again --> to ensure that different runs of benchmark use the same data set
+    never overwrite a data set file again --> to ensure that different runs of benchmark use the same data set
 """
 from __future__ import print_function
 from share.conf import trainingDirName, dataSetSizeStart
@@ -129,9 +129,9 @@ if __name__ == "__main__":
         f.close()
     
 
-    #########################################################
-    #    always ensure read-only policy for data set dir    #
-    #########################################################
+    ##########################################################
+    #    always enforce read-only policy for data set dir    #
+    ##########################################################
     try:
         scriptChmod = """
             orig_dir="`pwd`"

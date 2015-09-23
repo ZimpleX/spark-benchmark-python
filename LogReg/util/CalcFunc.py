@@ -7,7 +7,8 @@ Squared error cost function
 Gradient descent
 
 NOTE that functions in this file nearly all dealing with single
-point only. As we would operate on the whole data set using RDD
+data point only. As we would operate on the whole data set using 
+RDD, in the main function (LogisticRegression.py).
 """
 import numpy as np
 from math import exp
