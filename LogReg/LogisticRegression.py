@@ -88,9 +88,9 @@ def parseArg():
             required=True, help="file name of training data set")
     parser.add_argument('-i', '--iteration', type=int, metavar='ITR',
             default=100, help="max num of itr to do the log reg")
-    parser.add_argument('-w', '-weight', type=float, metavar='W',
+    parser.add_argument('-w', '--weight', type=float, metavar='W',
             default=0., help='initial weight')
-    parser.add_argument('-b', '-bias', type=float, metavar='B',
+    parser.add_argument('-b', '--bias', type=float, metavar='B',
             default=0., help='initial bias (threshold)')
     parser.add_argument('-r', '--rate', type=float, metavar='R',
             default=0.01, help='learning rate for updating weight')
@@ -106,6 +106,8 @@ if __name__ == "__main__":
     conf = Conf(wLen, wInit=[args.weight]*wLen, tInit=args.bias,
             learnRate=args.rate, itrMax=args.iteration)
 
+    print("setting for this run")
+    print(str(args))
     print("first data point is:")
     print(data.pts.first())
     print("initial weight vector is:")

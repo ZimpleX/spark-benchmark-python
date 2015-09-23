@@ -14,7 +14,15 @@ def trainingFunc(funcName):
     return:
         the actual training function
     """
-    if funcName == "AttenSin":
+    if funcName == "Sigmoid":
+        """
+        this is the very most suitable function for log neurons
+        """
+        def sigmoid(xList):
+            xSum = reduce(lambda x1, x2: x1+x2, xList)
+            return 1 / (1 + exp(-xSum))
+        return sigmoid
+    elif funcName == "AttenSin":
         def attenSin(xList):
             assert len(xList) >= 1
             expPow = xList[0] * 0.2

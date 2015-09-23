@@ -23,7 +23,7 @@ def parseArg():
             choices=range(3, 15), default=12, 
             help="specify the size of data set (in terms of 2^N)")
     parser.add_argument("-f", "--function", type=str, 
-            choices=['AttenSin', 'Random'], default='AttenSin', 
+            choices=['Sigmoid', 'AttenSin', 'Random'], default='Sigmoid', 
             help="Specify the training function to gen the data set")
     return parser.parse_args()
 

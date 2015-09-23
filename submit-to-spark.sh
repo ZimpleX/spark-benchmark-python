@@ -1,5 +1,14 @@
 #!/bin/bash
 set -eu
+
+#############################################################
+#   NOTE:                                                   #
+#   this script is currently hard coding many variables.    #
+#   (cuz now I am only focusing on single benchmark, and    #
+#   single training set configuration)                      #
+#   Will eventually generalize it.                          #
+#############################################################
+
 # policy for logging:
 # read-only
 # and do renaming every time, based on the file creation time (newer file gets larger index)
@@ -21,34 +30,46 @@ then
     mkdir $launch_dir/../bm-log/LogReg
 fi
 
-#################
-cd $log_dir     #
-#################
-# dealing with renaming
-file_set="`ls -tr`"
-file_counter="1"
-for file in $file_set
-do
-    mv $file temp-$file_counter
-    file_counter=$((file_counter+1))
-done
+dir_format(){
+    #################
+    cd $log_dir     #
+    #################
+    # dealing with renaming
+    file_set="`ls -tr`"
+    file_counter="1"
+    for file in $file_set
+    do
+        mv $file temp-$file_counter
+        file_counter=$((file_counter+1))
+    done
 
-file_set="`ls -tr`"
-file_counter="1"
-for file in $file_set
-do
-    mv $file $file_counter".out"
-    file_counter=$((file_counter+1))
-done
+    file_set="`ls -tr`"
+    file_counter="1"
+    for file in $file_set
+    do
+        mv $file $file_counter".out"
+        file_counter=$((file_counter+1))
+    done
 
-count="`ls -ltr | wc -l`"
+    count="`ls -ltr | wc -l`"
+    #################
+    cd $spark_dir   #
+    #################
+}
 
-#################
-cd $spark_dir   #
-#################
+dir_format
+
 #./sbin/start-master.sh
-#./sbin/start-slaves.sh 
-./bin/spark-submit $launch_dir/LogReg/LogisticRegression.py | tee $log_dir/$count".out"
+#./sbin/start-slave.sh spark://zimplex:7077
 
-chmod 444 $log_dir/*
+data_set_dir=$launch_dir'/LogReg/training-data-set/Sigmoid/'
+for size in {03..12}
+do
+    file_name=${data_set_dir}3_${size}
+    ./bin/spark-submit --master spark://zimplex:7077 $launch_dir/LogReg/LogisticRegression.py -f $file_name | tee $log_dir/${count}.out
+    chmod 444 $log_dir/*
+    dir_format
+done 
+
+#./sbin/stop-all.sh
 
