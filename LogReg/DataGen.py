@@ -1,17 +1,31 @@
 """
 this script is to generate training data set for LogReg benchmark
+it uses a mix of shell script and python script, as i think shell script is
+more concise with regard to directory formatting
+
+also note that the policy regarding data set is:
+    never overweite a data set file again --> to ensure that different runs of benchmark use the same data set
 """
-from util.EmbedScript import run_script, ScriptException
+from __future__ import print_function
+from util.EmbedScript import runScript, ScriptException
+from util.TrainingFunc import trainingFunc
+from random import uniform
+import os
+
+dataSetSizeStart = 3
 
 if __name__ == "__main__":
     taskName = 'AttenSin'
     inputSize = 3
-    dataSetSize = 12
+    dataSetSize = 13
     assert inputSize > 0 and inputSize <= 10
     assert dataSetSize <= 14 and dataSetSize >= 3
+    #################################
+    #    format the data set dir    #
+    #################################
     try:
         # shell script to be run as subprocess
-        script = """
+        scriptFormatDir = """
             set -eu
             # setup data set dir
             orig_dir="`pwd`"
@@ -19,7 +33,7 @@ if __name__ == "__main__":
             task_name="$0"
             ip_size="$1"
             set_size_pow="$2"
-            set_size_pow_start=03
+            set_size_pow_start=0"$3"
             if [ ! -d $orig_dir$dir_name ]
             then
                 mkdir $orig_dir$dir_name
@@ -61,9 +75,53 @@ if __name__ == "__main__":
         #       e.g.:
         #           suppose user provide 10, then data set with size 2^3, 2^4, 2^5, ... 2^10 will be generated,
         #           and be stored as separate files in the corresponding folder
-        stdout, stderr = run_script(script, [taskName, str(inputSize), str(dataSetSize)])
+        #   $3: indicate min number of tuples in the data-set
+        stdout, stderr = runScript(scriptFormatDir, [taskName, str(inputSize), str(dataSetSize), str(dataSetSizeStart)])
         print("============================")
         print("script msg: \n" + str(stdout))
         print("============================")
+    except ScriptException as se:
+        print(se)
+
+
+    #########################################
+    #    generate data and write to file    #
+    #########################################
+    genY = trainingFunc(taskName)
+    trainingDirName = 'training-data-set/'
+    for dFile in os.listdir(trainingDirName + taskName):
+        dFileFull = trainingDirName + taskName + '/' + dFile
+        # all old files should already be read-only
+        if not os.access(dFileFull, os.W_OK):
+            continue
+
+        ipSize, dSize = dFile.split("_")
+        ipSize = int(ipSize)
+        dSize = int(dSize)
+        assert ipSize == inputSize
+        assert dSize >= dataSetSizeStart and dSize <= dataSetSize
+        assert os.stat(dFileFull).st_size == 0
+        f = open(dFileFull, 'w')
+        numEntry = pow(2, dSize)
+        for i in range(0, numEntry):
+            # randomly generate input list, within range 0 ~ 10
+            xList = [uniform(0, 10) for k in range(0, inputSize)]
+            dataList = [genY(xList)] + xList
+            dataStr = reduce(lambda x,y: str(x)+' '+str(y), dataList)
+            print(dataStr, file=f)
+        f.close()
+    
+
+    #########################################################
+    #    always ensure read-only policy for data set dir    #
+    #########################################################
+    try:
+        scriptChmod = """
+            orig_dir="`pwd`"
+            dir_name='/training-data-set/'
+            task_name="$0"
+            chmod 444 $orig_dir$dir_name$task_name/*
+        """
+        stdout, stderr = runScript(scriptChmod, [taskName])
     except ScriptException as se:
         print(se)

@@ -1,4 +1,8 @@
-def run_script(script, stdin=None):
+"""
+this module enables you to call shell script within python script, using submodule
+"""
+
+def runScript(script, stdin=None):
     """
     embed shell script into this python script:
         reference: http://stackoverflow.com/questions/2651874/embed-bash-in-python

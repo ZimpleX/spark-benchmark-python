@@ -7,7 +7,6 @@ version 0 of logistic regression:
 
 from pyspark import SparkContext
 import numpy as np
-import math
 import operator as op
 import os
 
@@ -78,12 +77,6 @@ class Data:
                 .map(lambda x: x.split()) \
                 .map(lambda x: [float(x[0]), \
                 np.array([float(x[i + 1]) for i in range(len(x) - 1)])])
-
-"""
-def actByLog(xList, weight):
-    z = np.dot(xList, weight)
-    return 1 / (1 + math.exp(-z))
-"""
 
 
 if __name__ == "__main__":

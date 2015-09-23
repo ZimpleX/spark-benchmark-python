@@ -10,7 +10,7 @@ NOTE that functions in this file nearly all dealing with single
 point only. As we would operate on the whole data set using RDD
 """
 import numpy as np
-import math
+from math import exp
 
 def actByLog(xList, weight):
     """
@@ -23,7 +23,7 @@ def actByLog(xList, weight):
         y           single output signal
     """
     z = np.dot(xList, weight)
-    return 1 / (1 + math.exp(-z))
+    return 1 / (1 + exp(-z))
 
 def descentGradientW(x, t, weight):
     """
