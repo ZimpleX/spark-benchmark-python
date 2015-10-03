@@ -106,14 +106,10 @@ if __name__ == "__main__":
     conf = Conf(wLen, wInit=[args.weight]*wLen, tInit=args.bias,
             learnRate=args.rate, itrMax=args.iteration)
 
-    print("setting for this run")
-    print(str(args))
-    print("first data point is:")
-    print(data.pts.first())
-    print("initial weight vector is:")
-    print(conf.wInit)
-    print("initial threshold is:")
-    print(conf.tInit)
+    print("setting for this run\n{}".format(args))
+    print("first data point is:\n{}".format(data.pts.first()))
+    print("initial weight vector is:\n{}".format(conf.wInit))
+    print("initial threshold is:\n{}".format(conf.tInit))
     
     weight = conf.wInit
     threshold = conf.tInit
@@ -121,16 +117,15 @@ if __name__ == "__main__":
         cf.costFunctionSqrErr(p[1], p[0], weight)) \
         .reduce(lambda c1, c2: c1 + c2)
 
-    print("Initial cost is:")
-    print(cost)
+    print("Initial cost is:\n{}".format(cost))
 
     for itr in range(conf.itrMax):
         if (itr % 10 == 0):
             cost = data.pts.map(lambda p: \
                 cf.costFunctionSqrErr(p[1], p[0], weight)) \
                 .reduce(lambda c1, c2: c1 + c2)
-            print("Itr " + str(itr))
-            print("Cost " + str(cost))
+            print("Itr {}".format(itr))
+            print("Cost {}".format(cost))
         gradientW = data.pts.map(lambda p: \
                 cf.descentGradientW(p[1], p[0], weight)) \
                 .reduce(lambda d1, d2: d1 + d2)
@@ -140,15 +135,9 @@ if __name__ == "__main__":
         weight += conf.learnRate * gradientW
         threshold += conf.learnRate * gradientT
 
-    print("Final weight:")
-    print(weight)
-    print("final threshold:")
-    print(threshold)
-    print("final gradient W:")
-    print(gradientW)
-    print("final gradient T:")
-    print(gradientT)
-    print("final itr")
-    print(itr)
-    print("final cost")
-    print(cost)
+    print("Final weight: {}".format(weight))
+    print("final threshold: {}".format(threshold))
+    print("final gradient W: {}".format(gradientW))
+    print("final gradient T: {}".format(gradientT))
+    print("final itr {}".format(itr))
+    print("final cost {}".format(cost))
