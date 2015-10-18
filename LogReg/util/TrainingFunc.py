@@ -22,14 +22,27 @@ def trainingFunc(funcName):
             xSum = reduce(lambda x1, x2: x1+x2, xList)
             return 1 / (1 + exp(-xSum))
         return sigmoid
-    elif funcName == "AttenSin":
-        def attenSin(xList):
+    elif funcName == "AttenSin1":
+        def attenSin1(xList):
             assert len(xList) >= 1
             expPow = xList[0] * 0.2
             sinSum = reduce(lambda x1, x2: x1 + x2, xList) - xList[0]
             return exp(-abs(expPow)) * abs(sin(sinSum))
-        return attenSin
+        return attenSin1
     elif funcName == "Random":
         def rand(xList):
             return uniform(0, 1)
         return rand
+    elif funcName == "AttenSin2":
+        def attenSin2(xList):
+            assert len(xList) >= 1
+            expPow = xList[0] * 0.2
+            sinSum = reduce(lambda x1, x2: x1 + x2, xList) - xList[0]
+            return exp(-abs(expPow)) * sin(sinSum)
+        return attenSin2
+    elif funcName == "AttenSin3":
+        def attenSin3(xList):
+            sinSum = sum(xList)
+            return exp(-0.06 * sinSum) * sin(sinSum)
+        return attenSin3
+

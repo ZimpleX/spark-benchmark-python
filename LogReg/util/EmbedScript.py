@@ -2,7 +2,7 @@
 this module enables you to call shell script within python script, using submodule
 """
 
-def runScript(script, stdin=None):
+def runScript(script, stdin=None, output_opt='pipe'):
     """
     embed shell script into this python script:
         reference: http://stackoverflow.com/questions/2651874/embed-bash-in-python
@@ -10,12 +10,17 @@ def runScript(script, stdin=None):
     argument:
         script  string  the script to be executed via "bash -c"
         stdin   list    should be a list of arguments passed to the script
+        output_opt  string  how should the output be treated: whether to pipe it or to display it directly in terminal
     return:
         stdout and stderr of script
     """
     import subprocess as sp
-    proc = sp.Popen(['bash', '-c', script] + stdin,
-        stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
+    proc = None
+    if output_opt == 'pipe':
+        proc = sp.Popen(['bash', '-c', script] + stdin,
+            stdout=sp.PIPE, stderr=sp.PIPE, stdin=sp.PIPE)
+    else:
+        proc = sp.Popen(['bash', '-c', script] + stdin, stdin=sp.PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode:
         raise ScriptException(proc.returncode, stdout, stderr, script)
