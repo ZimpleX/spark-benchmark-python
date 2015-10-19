@@ -14,10 +14,11 @@ def printf(string, *reflex, type='INFO', separator=None):
     """
     if reflex:
         string = string.format(reflex)
-    string = '[{}]\t{}'.format(type, string)
+    string = '[{}] {}'.format(type, string)
+    pdb.set_trace()
     if not separator:
         print(string)
     else:
-        maxLen = reduce(lambda l1,l2: (len(l2) > len(l1)) and len(l2) or len(l1), string.split("\n"), '')
+        maxLen = reduce(lambda l1,strL2: (l1 < len(strL2)) and len(strL2) or l1, string.split("\n"), 0)
         sepLine = separator*maxLen
         print('{}\n{}\n{}'.format(sepLine, string, sepLine))

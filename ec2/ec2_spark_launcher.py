@@ -15,8 +15,12 @@ DEFAULT_SPARK = '../spark-1.5.0-bin-hadoop2.6/'
 
 DEFAULT_NAME = 'unnamed_cluster'
 
-DEFAULT_SECOND_LVL_ARGS = {'--instance-type': 'm1.large',
+DEFAULT_EC2_ARGS = {'--instance-type': 'm1.large',
                            '--region': 'us-west-2'}
+DEFAULT_LAUNCH_ARGS = ['--instance-type', 
+                       '--region']
+DEFAULT_LOGIN_ARGS = ['--region']
+DEFAULT_DESTROY_ARGS = ['--region']
 
 
 def parseArgs():
@@ -56,19 +60,23 @@ if __name__ == '__main__':
             print(se)
         exit()
 
-    second_lvl_arg_list = map(lambda i: '{} {}'.format(list(DEFAULT_SECOND_LVL_ARGS.keys())[i], 
-                        list(DEFAULT_SECOND_LVL_ARGS.values())[i]), range(len(DEFAULT_SECOND_LVL_ARGS)))
-    # NOTE: don't use '+=', cuz if the same arg is overwritten in cmd line, 
-    # you need to put the default value prior to the overwritten one
+    mode_keys = None
     if args.launch:
-        args.spark_ec2_flag = ' '.join(second_lvl_arg_list) + args.spark_ec2_flag
+        mode_keys = DEFAULT_LAUNCH_ARGS
     elif args.login:
-        args.spark_ec2_flag = ''
+        mode_keys = DEFAULT_LOGIN_ARGS
     elif args.destroy:
-        pass
+        mode_keys = DEFAULT_DESTROY_ARGS
     else:
         log.printf('unknown mode!', type='ERROR', separator='*')
         exit()
+
+    second_lvl_arg_dict = {k:DEFAULT_EC2_ARGS[k] for k in mode_keys}
+    second_lvl_arg_list = map(lambda i: '{} {}'.format(list(second_lvl_arg_dict.keys())[i], 
+                        list(second_lvl_arg_dict.values())[i]), range(len(second_lvl_arg_dict)))
+    # NOTE: don't use '+=', cuz if the same arg is overwritten in cmd line, 
+    # you need to put the default value prior to the overwritten one
+    args.spark_ec2_flag = '{} {}'.format(' '.join(second_lvl_arg_list), args.spark_ec2_flag)
     args.spark_ec2_flag += ' -i {} -k {}' \
         .format(args.identity_file, args.identity_file.split('.pem')[0].split('/')[-1])
     print('args to spark-ec2 script: \n\t{}'.format(args.spark_ec2_flag))
@@ -114,16 +122,11 @@ if __name__ == '__main__':
         except ScriptException as se:
             print(se)
     elif args.destroy:
-        destroy_warning = "Data won't be recoverable after destroy\nDo you really want to destroy {}? [Y]/n"
-        log.printf(destroy_warning, args.destroy, type='WARN', separator='=')
-        veri_destroy = input()
-        if veri_destroy not in ['y', 'Y']:
-            print()
-            exit()
+        # there has already been warning in spark-ec2 script, so don't prompt warning here
         try:
-            stdout, stderr = runScript('{} destroy {}' \
-                    .format(ec2_spark_script, args.destroy),
-                    [], output_opt='display')
+            stdout, stderr = runScript('{} {} destroy {}' \
+                    .format(ec2_spark_script, args.spark_ec2_flag, args.destroy),
+                    [], output_opt='display', input_opt='cmd')
             log.printf('cluster successfully destroyed.', type='INFO', separator='-')
         except ScriptException as se:
             print(se)
