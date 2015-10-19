@@ -10,13 +10,13 @@ import argparse
 
 DEFAULT_CREDENTIAL = '../EC2-credential/zimplex0-credentials.csv'
 CHILD_SCRIPT = 'ec2/spark-ec2'
-DEFAULT_IDENTITY = '../EC2-credential/zimplex0-key-pair-uswest.pem'
+DEFAULT_IDENTITY = '../EC2-credential/zimplex0-key-pair-ap-southeast-1.pem'
 DEFAULT_SPARK = '../spark-1.5.0-bin-hadoop2.6/'
 
 DEFAULT_NAME = 'unnamed_cluster'
 
 DEFAULT_EC2_ARGS = {'--instance-type': 'm1.large',
-                           '--region': 'us-west-2'}
+                           '--region': 'ap-southeast-1'}
 DEFAULT_LAUNCH_ARGS = ['--instance-type', 
                        '--region']
 DEFAULT_LOGIN_ARGS = ['--region']

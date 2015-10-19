@@ -15,7 +15,6 @@ def printf(string, *reflex, type='INFO', separator=None):
     if reflex:
         string = string.format(reflex)
     string = '[{}] {}'.format(type, string)
-    pdb.set_trace()
     if not separator:
         print(string)
     else:
