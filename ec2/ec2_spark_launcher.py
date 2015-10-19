@@ -5,11 +5,12 @@ wrapper of spark-ec2 script
 """
 
 from util.EmbedScript import *
+import util.logging as log
 import argparse
 
 DEFAULT_CREDENTIAL = '../EC2-credential/zimplex0-credentials.csv'
 CHILD_SCRIPT = 'ec2/spark-ec2'
-DEFAULT_IDENTITY = '../zimplex0-key-pair-uswest.pem'
+DEFAULT_IDENTITY = '../EC2-credential/zimplex0-key-pair-uswest.pem'
 DEFAULT_SPARK = '../spark-1.5.0-bin-hadoop2.6/'
 
 DEFAULT_NAME = 'unnamed_cluster'
@@ -17,12 +18,6 @@ DEFAULT_NAME = 'unnamed_cluster'
 DEFAULT_SECOND_LVL_ARGS = {'--instance-type': 'm1.large',
                            '--region': 'us-west-2'}
 
-DESTROY_WARNING = """
-********************************************
-Data won't be recoverable after destroy
-Do you really want to destroy {}? [Y]/n
-********************************************
-"""
 
 def parseArgs():
     parser = argparse.ArgumentParser('launch spark in EC2, wrapper of spark-ec2 script')
@@ -61,8 +56,8 @@ if __name__ == '__main__':
             print(se)
         exit()
 
-    second_lvl_arg_list = map(lambda i: '{} {}'.format(DEFAULT_SECOND_LVL_ARGS.keys()[i], 
-                        DEFAULT_SECOND_LVL_ARGS.values()[i]), range(len(DEFAULT_SECOND_LVL_ARGS)))
+    second_lvl_arg_list = map(lambda i: '{} {}'.format(list(DEFAULT_SECOND_LVL_ARGS.keys())[i], 
+                        list(DEFAULT_SECOND_LVL_ARGS.values())[i]), range(len(DEFAULT_SECOND_LVL_ARGS)))
     # NOTE: don't use '+=', cuz if the same arg is overwritten in cmd line, 
     # you need to put the default value prior to the overwritten one
     if args.launch:
@@ -72,14 +67,10 @@ if __name__ == '__main__':
     elif args.destroy:
         pass
     else:
-        print("""
-*************
-unknown mode!
-*************
-        """)
+        log.printf('unknown mode!', type='ERROR', separator='*')
         exit()
-    args.spark_ec2_flag += ' -i {} -c {} -k {}' \
-        .format(args.identity_file, args.credential_file, args.identity_file.split('.pem')[0])
+    args.spark_ec2_flag += ' -i {} -k {}' \
+        .format(args.identity_file, args.identity_file.split('.pem')[0].split('/')[-1])
     print('args to spark-ec2 script: \n\t{}'.format(args.spark_ec2_flag))
 
     ec2_credential = args.credential_file
@@ -99,13 +90,9 @@ unknown mode!
             echo $SECRET_ACCESS_KEY
         """.format(args.credential_file)
         stdout, stderr = runScript(scriptPrep, [])
-        aws_access_key_id = stdout.split("\n")[0]
-        aws_secret_access_key = stdout.split("\n")[1]
-        print("""
-=========================
-environment variable set.
-=========================
-        """)
+        aws_access_key_id = stdout.decode('utf-8').split("\n")[0]
+        aws_secret_access_key = stdout.decode('utf-8').split("\n")[1]
+        log.printf('environment variable set.', separator='-')
     except ScriptException as se:
         print(se)
 
@@ -115,11 +102,7 @@ environment variable set.
             stdout, stderr = runScript('{} {} launch {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.launch), 
                     [], output_opt='display')
-            print("""
-==============================
-cluster successfully launched.
-==============================
-            """)
+            log.printf('cluster successfully launched.', type='INFO', separator='-')
         except ScriptException as se:
             print(se)
     elif args.login:
@@ -127,15 +110,13 @@ cluster successfully launched.
             stdout, stderr = runScript('{} {} login {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.login),
                     [], output_opt='display')
-            print("""
-===============================
-cluster successfully logged in.
-===============================
-            """)
+            log.printf('cluster successfully logged in.', type='INFO', separator='-')
         except ScriptException as se:
             print(se)
     elif args.destroy:
-        veri_destroy = input(DESTROY_WARNING.format(args.destroy))
+        destroy_warning = "Data won't be recoverable after destroy\nDo you really want to destroy {}? [Y]/n"
+        log.printf(destroy_warning, args.destroy, type='WARN', separator='=')
+        veri_destroy = input()
         if veri_destroy not in ['y', 'Y']:
             print()
             exit()
@@ -143,11 +124,7 @@ cluster successfully logged in.
             stdout, stderr = runScript('{} destroy {}' \
                     .format(ec2_spark_script, args.destroy),
                     [], output_opt='display')
-            print("""
-===============================
-cluster successfully destroyed.
-===============================
-            """)
+            log.printf('cluster successfully destroyed.', type='INFO', separator='-')
         except ScriptException as se:
             print(se)
 
