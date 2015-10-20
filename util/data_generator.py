@@ -176,7 +176,7 @@ def dataGeneratorMain(args):
             if args.function == 'ANN-bp':
                 pass
             else:
-                yList = genY(xList)
+                yList = [genY(xList)]
             dataList = yList + xList
             dataStr = reduce(lambda x,y: str(x)+' '+str(y), dataList)
             print(dataStr, file=f)

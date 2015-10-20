@@ -15,19 +15,20 @@ set -eu
 # -t flag is doing the ranking based on creation time
 # -r for reverse the ordering of ls (newest file is at the bottom of ls output)
 
-launch_dir="`pwd`"
-log_dir=$launch_dir"/../bm-log/LogReg/"
-spark_dir=$launch_dir"/../spark-1.5.0-bin-hadoop2.6/"
+launch_dir="$(pwd)/"
+log_dir=$launch_dir'../bm-log/LogReg/'
+spark_dir=$launch_dir'../spark-1.5.0-bin-hadoop2.6/'
+#spark_dir=$launch_dir'../spark/'
 
-if [ ! -d "$launch_dir/../bm-log" ]
+if [ ! -d "$launch_dir../bm-log" ]
 then
-    echo "created log dir: $launch_dir/../bm-log"
-    mkdir $launch_dir/../bm-log
+    echo "created log dir: ${launch_dir}../bm-log"
+    mkdir "${launch_dir}../bm-log"
 fi
-if [ ! -d "$launch_dir/../bm-log/LogReg" ]
+if [ ! -d "${launch_dir}../bm-log/LogReg" ]
 then
-    echo "created log dir: $launch_dir/../bm-log/LogReg"
-    mkdir $launch_dir/../bm-log/LogReg
+    echo "created log dir: ${launch_dir}../bm-log/LogReg"
+    mkdir "${launch_dir}../bm-log/LogReg"
 fi
 
 dir_format(){
@@ -62,11 +63,11 @@ dir_format
 #./sbin/start-master.sh
 #./sbin/start-slave.sh spark://zimplex:7077
 
-data_set_dir=$launch_dir'/LogReg/training-data-set/Sigmoid/'
+data_set_dir="${launch_dir}LogReg/training-data-set/Sigmoid/"
 for size in {03..12}
 do
-    file_name=${data_set_dir}3_${size}
-    ./bin/spark-submit --master spark://zimplex:7077 $launch_dir/LogReg/LogisticRegression.py -f $file_name | tee $log_dir/${count}.out
+    file_name=${data_set_dir}${size}
+    ./bin/spark-submit --master spark://54.169.252.81:7077 $launch_dir/LogReg/LogisticRegression.py -f $file_name | tee $log_dir/${count}.out
     chmod 444 $log_dir/*
     dir_format
 done 

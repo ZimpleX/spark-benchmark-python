@@ -15,7 +15,7 @@ DEFAULT_SPARK = '../spark-1.5.0-bin-hadoop2.6/'
 
 DEFAULT_NAME = 'unnamed_cluster'
 
-DEFAULT_EC2_ARGS = {'--instance-type': 'm1.large',
+DEFAULT_EC2_ARGS = {'--instance-type': 't2.micro',
                            '--region': 'ap-southeast-1'}
 DEFAULT_LAUNCH_ARGS = ['--instance-type', 
                        '--region']
@@ -90,8 +90,8 @@ if __name__ == '__main__':
         scriptPrep = """
             set -eu
             credential_file={}
-            ACCESS_KEY_ID=`cat $credential_file | awk 'NR==2' | awk -F ',' '{{print $(NF-1)}}'`
-            SECRET_ACCESS_KEY=`cat $credential_file | awk 'NR==2' | awk -F ',' '{{print $NF}}'`
+            ACCESS_KEY_ID=$(cat $credential_file | awk 'NR==2' | awk -F ',' '{{print $(NF-1)}}')
+            SECRET_ACCESS_KEY=$(cat $credential_file | awk 'NR==2' | awk -F ',' '{{print $NF}}')
             export AWS_SECRET_ACCESS_KEY=$SECRET_ACCESS_KEY
             export AWS_ACCESS_KEY_ID=$ACCESS_KEY_ID
             echo $ACCESS_KEY_ID
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         try:
             stdout, stderr = runScript('{} {} login {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.login),
-                    [], output_opt='display')
+                    [], output_opt='display', input_opt='cmd')
             log.printf('cluster successfully logged in.', type='INFO', separator='-')
         except ScriptException as se:
             print(se)

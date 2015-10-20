@@ -4,6 +4,7 @@ All training function will produce a target value between 0 and 1
 """
 from math import exp, sin
 from random import uniform
+from functools import reduce
 
 def trainingFunc(funcName):
     """

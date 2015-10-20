@@ -1,8 +1,9 @@
 """
 this module enables you to call shell script within python script, using submodule
 """
+from functools import reduce
 
-def runScript(script, stdin=None, output_opt='pipe', input_opt='pipe'):
+def runScript(script, stdin=None, output_opt='pipe', input_opt='pipe', input_pipe=['']):
     """
     embed shell script into this python script:
         reference: http://stackoverflow.com/questions/2651874/embed-bash-in-python
@@ -13,6 +14,7 @@ def runScript(script, stdin=None, output_opt='pipe', input_opt='pipe'):
         output_opt  string  how should the output be treated: whether to pipe it or to display it directly in terminal
     return:
         stdout and stderr of script
+        input_pipe  the list of string that you want to pipe to subprocess as input
     """
     import subprocess as sp
     proc = None
@@ -22,16 +24,21 @@ def runScript(script, stdin=None, output_opt='pipe', input_opt='pipe'):
         output_opt = None
     if input_opt == 'pipe':
         input_opt = sp.PIPE
+        input_pipe = "\n".join(input_pipe).encode('utf-8')
     else:
         input_opt = None
+        input_pipe = None
 
     proc = sp.Popen(['bash', '-c', script] + stdin,
         stdout=output_opt, stderr=output_opt, stdin=input_opt)
+    
+    stdout, stderr = proc.communicate(input=input_pipe)
 
-    stdout, stderr = proc.communicate()
     if proc.returncode:
         raise ScriptException(proc.returncode, stdout, stderr, script)
     return stdout, stderr
+
+
 
 class ScriptException(Exception):
     def __init__(self, returncode, stdout, stderr, script):
