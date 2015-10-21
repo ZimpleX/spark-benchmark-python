@@ -1,1 +1,1 @@
-/home/zenghq/workspace/SDP/benchmark-python/LogReg/util/EmbedScript.py
+../LogReg/util/EmbedScript.py
