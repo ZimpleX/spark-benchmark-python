@@ -11,12 +11,34 @@ import re
 import json
 import pdb
 
+
+
 DEFAULT_CREDENTIAL = '../EC2-credential/zimplex0-credentials.csv'
 DEFAULT_IDENTITY = '../EC2-credential/zimplex0-key-pair-ap-southeast-1.pem'
 DEFAULT_REGION = 'ap-southeast-1'
-
 DEFAULT_CLUSTER_NAME = 'unnamed_cluster'
-OUTPUT_FORMAT = 'json'
+
+OUTPUT_FORMAT = 'json'  # don't change this
+
+# all dir are info on the Amazon AWS, not the local machine that this script resides
+# directories keywords:
+#       https / http: internet
+#       file: ec2 (master node) (has to be absolute path)
+#       hdfs: aws hadoop
+AWS_DIR_INFO = {    #default value
+        'spark': '/root/spark/',
+        'log': '/root/bm-log/',
+        'data': 'file://root/Sigmoid/'
+}
+
+# some additional information about the application
+APP_INFO = {    # default value
+        'repo_url': 'https://github.com/ZimpleX/spark-benchmark-python.git', # will be cloned to under root of master node
+        'name': 'LogReg',
+        'submit_main': 'LogReg/LogisticRegression.py'   # relative to the newly downloaded repo dir (e.g.: relative to /root/spark-benchmark-python/)
+}
+
+
 
 def parseArgs():
     parser = argparse.ArgumentParser('submit applications to already launched clusters')
@@ -30,6 +52,7 @@ def parseArgs():
             default=DEFAULT_CLUSTER_NAME, help='name of the ec2 cluster')
 
     return parser.parse_args()
+
 
 
 if __name__ == '__main__':
@@ -53,7 +76,10 @@ if __name__ == '__main__':
         print(se)
     print()
 
-    # find master id, then get public-dns
+    #########################################
+    #  find master id, then get public-dns  #
+    #########################################
+    master_dns = ''
     try:
         stdout, stderr = runScript('aws ec2 describe-instances', [], output_opt='pipe')
         #inst = json.loads(stdout.decode('utf-8'))
@@ -66,5 +92,70 @@ if __name__ == '__main__':
         master_dns_regex = '"{}": "{}",'.format('PublicDnsName', '\S*')
         master_dns = re.search(master_dns_regex, out_str).group().split("\"")[-2]
         log.printf("Get master public DNS:\n       {}".format(master_dns), type='INFO', separator='-')
+    except ScriptException as se:
+        print(se)
+
+    #################################################
+    #  login to master node and prepare for submit  #
+    #################################################
+    try:
+        app_root = APP_INFO['repo_url'].split('/')[-1].split('.git')[0]
+        submit_main = '/root/{}/{}'.format(app_root, APP_INFO['submit_main'])
+        log_dir = '{}{}/'.format(AWS_DIR_INFO['log'], APP_INFO['name'])
+        pipeCreateDir = """
+            sudo yum install python34
+
+            git clone {}
+            submit_main={}
+            launch_dir=$(pwd)
+            log_dir={}
+            spark_dir={}
+            data_file={}
+            master_dns={}
+
+            echo $launch_dir
+            if [ ! -d ${{launch_dir}}/bm-log ]
+            then
+                mkdir ${{launch_dir}}/bm-log
+            fi
+            if [ ! -d ${{launch_dir}}/bm-log/LogReg ]
+            then
+                mkdir ${{launch_dir}}/bm-log/LogReg
+            fi
+
+            #################
+            cd $log_dir     #
+            #################
+            # dealing with renaming
+            file_set="`ls -tr`"
+            file_counter="1"
+            for file in $file_set
+            do
+                mv $file temp-$file_counter
+                file_counter=$((file_counter+1))
+            done
+
+            file_set="`ls -tr`"
+            file_counter="1"
+            for file in $file_set
+            do
+                mv $file $file_counter".out"
+                file_counter=$((file_counter+1))
+            done
+
+            count="`ls -ltr | wc -l`"
+            
+            
+            #################
+            cd $spark_dir   #
+            #################
+            echo $data_file
+            ./bin/spark-submit --master spark://$master_dns:7077 $submit_main -f $data_file
+
+            logout
+        """.format(APP_INFO['repo_url'], submit_main, 
+                log_dir, AWS_DIR_INFO['spark'], 'file:///root/spark-benchmark-python/LogReg/training-data-set/Sigmoid_in-3-out-1/08', master_dns)
+
+        stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login --terminal_pipe \'{}\''.format(pipeCreateDir), [], output_opt='display')
     except ScriptException as se:
         print(se)

@@ -43,6 +43,8 @@ def parseArgs():
             const=DEFAULT_NAME, help='login to a cluster')
     parser.add_argument('--destroy', type=str, metavar='CLUSTER_NAME', nargs='?',
             const=DEFAULT_NAME, help='destroy cluster, data UNRECOVERABLE!')
+    parser.add_argument('--terminal_pipe', type=str, metavar='PIPE_CMD', 
+            help='[only for login]: do you want to pipe the input to ec2 master node terminal?')
     
     return parser.parse_args()
 
@@ -115,10 +117,12 @@ if __name__ == '__main__':
             print(se)
     elif args.login:
         try:
+            ip_opt = args.terminal_pipe and 'pipe' or 'cmd'
+            print(args.terminal_pipe)
             stdout, stderr = runScript('{} {} login {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.login),
-                    [], output_opt='display', input_opt='cmd')
-            log.printf('cluster successfully logged in.', type='INFO', separator='-')
+                    [], output_opt='display', input_opt=ip_opt, input_pipe=[args.terminal_pipe])
+            log.printf('finish interaction with master node.', type='INFO', separator='-')
         except ScriptException as se:
             print(se)
     elif args.destroy:
