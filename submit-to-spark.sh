@@ -63,11 +63,11 @@ dir_format
 #./sbin/start-master.sh
 #./sbin/start-slave.sh spark://zimplex:7077
 
-data_set_dir="${launch_dir}LogReg/training-data-set/Sigmoid/"
+data_set_dir="${launch_dir}LogReg/training-data-set/Sigmoid_in-3-out-1/"
 for size in {03..12}
 do
     file_name=${data_set_dir}${size}
-    ./bin/spark-submit --master spark://54.169.252.81:7077 $launch_dir/LogReg/LogisticRegression.py -f $file_name | tee $log_dir/${count}.out
+    ./bin/spark-submit --master spark://zimplex:7077 $launch_dir/LogReg/LogisticRegression.py -f $file_name | tee $log_dir/${count}.out
     chmod 444 $log_dir/*
     dir_format
 done 

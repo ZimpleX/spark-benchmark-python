@@ -28,7 +28,7 @@ OUTPUT_FORMAT = 'json'  # don't change this
 AWS_DIR_INFO = {    #default value
         'spark': '/root/spark/',
         'log': '/root/bm-log/',
-        'data': 'file://root/Sigmoid/'
+        'data': 'file://root/spark-benchmark-python/LogReg/training-data-set/Sigmoid_in-3-out-1/'
 }
 
 # some additional information about the application
@@ -103,15 +103,13 @@ if __name__ == '__main__':
         submit_main = '/root/{}/{}'.format(app_root, APP_INFO['submit_main'])
         log_dir = '{}{}/'.format(AWS_DIR_INFO['log'], APP_INFO['name'])
         pipeCreateDir = """
-            sudo yum install python34
-
-            git clone {}
-            submit_main={}
+            git clone {0}
+            submit_main={1}
             launch_dir=$(pwd)
-            log_dir={}
-            spark_dir={}
-            data_file={}
-            master_dns={}
+            log_dir={2}
+            spark_dir={3}
+            data_file={4}
+            master_dns={5}
 
             echo $launch_dir
             if [ ! -d ${{launch_dir}}/bm-log ]
@@ -122,6 +120,17 @@ if __name__ == '__main__':
             then
                 mkdir ${{launch_dir}}/bm-log/LogReg
             fi
+
+            #############################
+            cd spark-benchmark-python/  #
+            #############################
+            python3 -m util.data_generator
+
+            ############
+            cd /root/  #
+            ############
+            ./spark/copy-dir spark-benchmark-python
+
 
             #################
             cd $log_dir     #
@@ -150,12 +159,14 @@ if __name__ == '__main__':
             cd $spark_dir   #
             #################
             echo $data_file
-            ./bin/spark-submit --master spark://$master_dns:7077 $submit_main -f $data_file
+            echo $master_dns
+            echo $submit_main
+            PYSPARK_PYTHON=$(which python3) ./bin/spark-submit --master spark://$master_dns:7077 $submit_main -f $data_file
 
             logout
-        """.format(APP_INFO['repo_url'], submit_main, 
-                log_dir, AWS_DIR_INFO['spark'], 'file:///root/spark-benchmark-python/LogReg/training-data-set/Sigmoid_in-3-out-1/08', master_dns)
+        """.format(APP_INFO['repo_url'], submit_main, log_dir,
+                AWS_DIR_INFO['spark'], AWS_DIR_INFO['data']+'08', master_dns)
 
-        stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login --terminal_pipe \'{}\''.format(pipeCreateDir), [], output_opt='display')
+        stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login {} --terminal_pipe \'{}\''.format(args.cluster_name, pipeCreateDir), [], output_opt='display')
     except ScriptException as se:
         print(se)

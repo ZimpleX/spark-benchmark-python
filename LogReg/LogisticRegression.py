@@ -85,7 +85,8 @@ class Data:
 def parseArg():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', type=str, metavar='PATHTODATASET',
-            required=True, help="file name of training data set")
+            required=True, help="file name of training data set\
+                    \n[NOTE]: use absolute path, can either be file://... or hdfs://...")
     parser.add_argument('-i', '--iteration', type=int, metavar='ITR',
             default=100, help="max num of itr to do the log reg")
     parser.add_argument('-w', '--weight', type=float, metavar='W',
@@ -99,7 +100,7 @@ def parseArg():
 
 if __name__ == "__main__":
     args = parseArg()
-    data = Data(os.path.join(os.path.dirname(__file__), args.file), sc)
+    data = Data(args.file, sc)
     # TODO: should put persist here or in Data.setupDataVector ??
     data.pts.persist()
     wLen = len(data.pts.first()[1])

@@ -7,6 +7,7 @@ wrapper of spark-ec2 script
 from util.EmbedScript import *
 import util.logging as log
 import argparse
+import pdb
 
 DEFAULT_CREDENTIAL = '../EC2-credential/zimplex0-credentials.csv'
 CHILD_SCRIPT = 'ec2/spark-ec2'
@@ -36,7 +37,8 @@ def parseArgs():
     parser.add_argument('-sef', '--spark_ec2_flag', type=str, metavar='SPARK_EC2_FLAG', default='',
             help='flags passed to spark-ec2 script (wrap by "" or \'\') \
                 \n[NOTE]: don\'t pass credential file and identity file using -sef; \
-                          pass them with -c or -i')
+                          pass them with -c or -i \
+                \n[NOTE]: don\'t contain \'=\' in the arg string')
     parser.add_argument('--launch', type=str, metavar='CLUSTER_NAME', nargs='?',
             const=DEFAULT_NAME, help='launch a ec2 cluster of name <CLUSTER_NAME>')
     parser.add_argument('--login', type=str, metavar='CLUSTER_NAME', nargs='?',
