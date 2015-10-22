@@ -74,7 +74,7 @@ if __name__ == '__main__':
     elif args.destroy:
         mode_keys = DEFAULT_DESTROY_ARGS
     else:
-        log.printf('unknown mode!', type='ERROR', separator='*')
+        log.printf('unknown mode!', type='ERROR')
         exit()
 
     second_lvl_arg_dict = {k:DEFAULT_EC2_ARGS[k] for k in mode_keys}
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         stdout, stderr = runScript(scriptPrep, [])
         aws_access_key_id = stdout.decode('utf-8').split("\n")[0]
         aws_secret_access_key = stdout.decode('utf-8').split("\n")[1]
-        log.printf('environment variable set.', separator='-')
+        log.printf('environment variable set.')
     except ScriptException as se:
         print(se)
 
@@ -116,17 +116,16 @@ if __name__ == '__main__':
             stdout, stderr = runScript('{} {} launch {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.launch), 
                     [], output_opt='display')
-            log.printf('cluster successfully launched.', type='INFO', separator='-')
+            log.printf('cluster successfully launched.', type='INFO')
         except ScriptException as se:
             print(se)
     elif args.login:
         try:
             ip_opt = args.terminal_pipe and 'pipe' or 'cmd'
-            print(args.terminal_pipe)
             stdout, stderr = runScript('{} {} login {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.login),
                     [], output_opt='display', input_opt=ip_opt, input_pipe=[args.terminal_pipe])
-            log.printf('finish interaction with master node.', type='INFO', separator='-')
+            log.printf('finish interaction with master node.', type='INFO')
         except ScriptException as se:
             print(se)
     elif args.destroy:
@@ -135,7 +134,7 @@ if __name__ == '__main__':
             stdout, stderr = runScript('{} {} destroy {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.destroy),
                     [], output_opt='display', input_opt='cmd')
-            log.printf('cluster successfully destroyed.', type='INFO', separator='-')
+            log.printf('cluster successfully destroyed.', type='INFO')
         except ScriptException as se:
             print(se)
 

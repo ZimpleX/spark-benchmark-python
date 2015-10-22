@@ -70,11 +70,10 @@ if __name__ == '__main__':
         stdout, stderr = runScript('aws configure', [], output_opt='display', 
                 input_opt='pipe', input_pipe=[key_id, secret_key, args.region, OUTPUT_FORMAT])
         print()
-        log.printf('AWS conf done', type='INFO', separator='-')
+        log.printf('AWS conf done', type='INFO')
 
     except ScriptException as se:
         print(se)
-    print()
 
     #########################################
     #  find master id, then get public-dns  #
@@ -83,15 +82,21 @@ if __name__ == '__main__':
     try:
         stdout, stderr = runScript('aws ec2 describe-instances', [], output_opt='pipe')
         #inst = json.loads(stdout.decode('utf-8'))
-        log.printf('instance info got', type='INFO', separator='-')
+        log.printf('instance info got, target: {}-master' \
+                .format(args.cluster_name), type='INFO')
         out_str = stdout.decode('utf-8')
         master_id_regex = '{}-master-{}'.format(args.cluster_name, '\S*')
-        master_id = re.search(master_id_regex, out_str).group().split('master-')[-1][:-2]
+        master_id = re.search(master_id_regex, out_str)
+        if not master_id:
+            log.printf('failed to get master-id:\n        check your cluster name / region ...', type='ERROR')
+            exit()
+        master_id = master_id.group().split('master-')[-1][:-2]
         stdout, stderr = runScript('aws ec2 describe-instances --instance-ids {}'.format(master_id), [], output_opt='pipe')
         out_str = stdout.decode('utf-8')
         master_dns_regex = '"{}": "{}",'.format('PublicDnsName', '\S*')
         master_dns = re.search(master_dns_regex, out_str).group().split("\"")[-2]
-        log.printf("Get master public DNS:\n       {}".format(master_dns), type='INFO', separator='-')
+        log.printf("Get {}-master public DNS:\n       {}" \
+                .format(args.cluster_name, master_dns), type='INFO')
     except ScriptException as se:
         print(se)
 
