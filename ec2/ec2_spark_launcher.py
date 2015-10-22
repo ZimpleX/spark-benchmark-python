@@ -17,9 +17,11 @@ DEFAULT_SPARK = '../spark-1.5.0-bin-hadoop2.6/'
 DEFAULT_NAME = 'unnamed_cluster'
 
 DEFAULT_EC2_ARGS = {'--instance-type': 't2.micro',
-                           '--region': 'ap-southeast-1'}
+                    '--region': 'ap-southeast-1',
+                    '--ami': 'ami-94ccdfc6'}
 DEFAULT_LAUNCH_ARGS = ['--instance-type', 
-                       '--region']
+                       '--region',
+                       '--ami']
 DEFAULT_LOGIN_ARGS = ['--region']
 DEFAULT_DESTROY_ARGS = ['--region']
 

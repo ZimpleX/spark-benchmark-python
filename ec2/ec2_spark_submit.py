@@ -28,7 +28,7 @@ OUTPUT_FORMAT = 'json'  # don't change this
 AWS_DIR_INFO = {    #default value
         'spark': '/root/spark/',
         'log': '/root/bm-log/',
-        'data': 'file://root/spark-benchmark-python/LogReg/training-data-set/Sigmoid_in-3-out-1/'
+        'data': 'file:///root/spark-benchmark-python/LogReg/training-data-set/Sigmoid_in-3-out-1/'
 }
 
 # some additional information about the application
@@ -104,6 +104,9 @@ if __name__ == '__main__':
         log_dir = '{}{}/'.format(AWS_DIR_INFO['log'], APP_INFO['name'])
         pipeCreateDir = """
             git clone {0}
+            
+            . .bashrc
+
             submit_main={1}
             launch_dir=$(pwd)
             log_dir={2}
@@ -129,7 +132,7 @@ if __name__ == '__main__':
             ############
             cd /root/  #
             ############
-            ./spark/copy-dir spark-benchmark-python
+            ./spark-ec2/copy-dir spark-benchmark-python
 
 
             #################
