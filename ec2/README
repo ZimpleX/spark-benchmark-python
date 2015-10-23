@@ -1,0 +1,19 @@
+manage your ec2 cluster with spark in an easy manner.
+control cluster from local machine in a single call.
+(need python3 installed)
+
+*ec2_spark_launcher*:
+    --  launch / login / destroy ec2 clusters
+    --  cd to parent directory, then
+        `python3 -m ec2.ec2_spark_launcher --help`
+        to see how you can configure your launch
+
+*ec2_spark_submit*:
+    --  submit application to already launched ec2 cluster
+        call this script after you call `ec2_spark_launcher` with `--launch`
+    --  cd to parent directory, then
+        `python3 -m ec2.ec2_spark_submit --help`
+        to see what you can do
+
+*TODO*:
+    --  `ec2_spark_submit`: support submisssion of user script to be run on cluster

@@ -1,7 +1,9 @@
 """
 launch this from root dir
 
-wrapper of spark-ec2 script
+Basically, this is a wrapper for spark-ec2 script.
+you can use this script to launch / login / destroy ec2 clusters. 
+commands for customized cluster configuration can also be passed in (piped to spark-ec2 script).
 """
 
 from util.EmbedScript import *
