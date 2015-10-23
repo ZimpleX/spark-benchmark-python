@@ -110,7 +110,14 @@ if __name__ == '__main__':
         pipeCreateDir = """
             git clone {0}
             
-            . .bashrc
+            # pre-submit check
+            . .bashrc   # set env var
+            py3_path=$(which python3)
+            if [[ -z $py3_path ]] || [[ $py3_path =~ '/which:' ]]
+            then
+                echo 'python3 is not installed! quit.'
+                exit
+            fi    
 
             submit_main={1}
             launch_dir=$(pwd)
@@ -174,7 +181,14 @@ if __name__ == '__main__':
             logout
         """.format(APP_INFO['repo_url'], submit_main, log_dir,
                 AWS_DIR_INFO['spark'], AWS_DIR_INFO['data']+'08', master_dns)
-
-        stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login {} --terminal_pipe \'{}\''.format(args.cluster_name, pipeCreateDir), [], output_opt='display')
+        """
+        # TODO: need to replace " with \" in pipeCreateDir
+        pipeCreateDir = pipeCreateDir.replace('"', '\\\"')
+        pipeCreateDir = pipeCreateDir.replace('`', '\\`')
+        pipeCreateDir = pipeCreateDir.replace('$(', '\\$(')
+        """
+        stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login {} --pipe' \
+                .format(args.cluster_name), [], 
+                output_opt='display', input_opt='pipe', input_pipe=[pipeCreateDir, '.quit'])
     except ScriptException as se:
         print(se)

@@ -47,8 +47,9 @@ def parseArgs():
             const=DEFAULT_NAME, help='login to a cluster')
     parser.add_argument('--destroy', type=str, metavar='CLUSTER_NAME', nargs='?',
             const=DEFAULT_NAME, help='destroy cluster, data UNRECOVERABLE!')
-    parser.add_argument('--terminal_pipe', type=str, metavar='PIPE_CMD', 
-            help='[only for login]: do you want to pipe the input to ec2 master node terminal?')
+    parser.add_argument('--pipe', action='store_true', 
+            help='[only for login]: do you want to pipe the input to ec2 master node terminal? \
+                    \nwill prompt out an interactive shell to record all cmds to be piped to ec2 shell')
     
     return parser.parse_args()
 
@@ -82,7 +83,7 @@ if __name__ == '__main__':
                         list(second_lvl_arg_dict.values())[i]), range(len(second_lvl_arg_dict)))
     # NOTE: don't use '+=', cuz if the same arg is overwritten in cmd line, 
     # you need to put the default value prior to the overwritten one
-    args.spark_ec2_flag = '{} {}'.format(' '.join(second_lvl_arg_list), args.spark_ec2_flag)
+    args.spark_ec2_flag = ' {} {}'.format(' '.join(second_lvl_arg_list), args.spark_ec2_flag)
     args.spark_ec2_flag += ' -i {} -k {}' \
         .format(args.identity_file, args.identity_file.split('.pem')[0].split('/')[-1])
     print('args to spark-ec2 script: \n\t{}'.format(args.spark_ec2_flag))
@@ -121,10 +122,20 @@ if __name__ == '__main__':
             print(se)
     elif args.login:
         try:
-            ip_opt = args.terminal_pipe and 'pipe' or 'cmd'
+            ip_opt = args.pipe and 'pipe' or 'cmd'
+            ip_pipe = []
+            if args.pipe:
+                print('enter cmds you want to send to ec2 cluster. type \'.quit\' to finish up.')
+                while True:
+                    new_ip = input('>> ')
+                    print(new_ip)
+                    if new_ip != '.quit':
+                        ip_pipe += [new_ip]
+                    else:
+                        break
             stdout, stderr = runScript('{} {} login {}' \
                     .format(ec2_spark_script, args.spark_ec2_flag, args.login),
-                    [], output_opt='display', input_opt=ip_opt, input_pipe=[args.terminal_pipe])
+                    [], output_opt='display', input_opt=ip_opt, input_pipe=ip_pipe)
             log.printf('finish interaction with master node.', type='INFO')
         except ScriptException as se:
             print(se)
