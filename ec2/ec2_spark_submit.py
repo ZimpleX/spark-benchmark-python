@@ -108,6 +108,11 @@ if __name__ == '__main__':
         submit_main = '/root/{}/{}'.format(app_root, APP_INFO['submit_main'])
         log_dir = '{}{}/'.format(AWS_DIR_INFO['log'], APP_INFO['name'])
         pipeCreateDir = """
+            app_root={}
+            if [ -d $app_root ]
+            then
+                rm -rf $app_root
+            fi
             git clone {0}
             
             # pre-submit check
@@ -119,12 +124,12 @@ if __name__ == '__main__':
                 exit
             fi    
 
-            submit_main={1}
+            submit_main={2}
             launch_dir=$(pwd)
-            log_dir={2}
-            spark_dir={3}
-            data_file={4}
-            master_dns={5}
+            log_dir={3}
+            spark_dir={4}
+            data_file={5}
+            master_dns={6}
 
             echo $launch_dir
             if [ ! -d ${{launch_dir}}/bm-log ]
@@ -179,14 +184,9 @@ if __name__ == '__main__':
             PYSPARK_PYTHON=$(which python3) ./bin/spark-submit --master spark://$master_dns:7077 $submit_main -f $data_file
 
             logout
-        """.format(APP_INFO['repo_url'], submit_main, log_dir,
+        """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
                 AWS_DIR_INFO['spark'], AWS_DIR_INFO['data']+'08', master_dns)
-        """
-        # TODO: need to replace " with \" in pipeCreateDir
-        pipeCreateDir = pipeCreateDir.replace('"', '\\\"')
-        pipeCreateDir = pipeCreateDir.replace('`', '\\`')
-        pipeCreateDir = pipeCreateDir.replace('$(', '\\$(')
-        """
+
         stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login {} --pipe' \
                 .format(args.cluster_name), [], 
                 output_opt='display', input_opt='pipe', input_pipe=[pipeCreateDir, '.quit'])

@@ -159,7 +159,8 @@ def dataGeneratorMain(args):
     for dFile in os.listdir(trainingDirName + taskName):
         dFileFull = trainingDirName + taskName + '/' + dFile
         # all old files should already be read-only
-        if not os.access(dFileFull, os.W_OK):
+        if not (os.stat(dFileFull).st_mode & int('010010010',2)):
+            # i don't use os.access(file, os.W_OK) here, as it will always be true if you launch python3 as root in ec2
             continue
         if 'conf' in dFile or 'ignore' in dFile:
             continue
