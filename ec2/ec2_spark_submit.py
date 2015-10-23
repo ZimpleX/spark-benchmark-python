@@ -108,7 +108,7 @@ if __name__ == '__main__':
         submit_main = '/root/{}/{}'.format(app_root, APP_INFO['submit_main'])
         log_dir = '{}{}/'.format(AWS_DIR_INFO['log'], APP_INFO['name'])
         pipeCreateDir = """
-            app_root={}
+            app_root={1}
             if [ -d $app_root ]
             then
                 rm -rf $app_root
