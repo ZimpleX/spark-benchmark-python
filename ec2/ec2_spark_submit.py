@@ -109,11 +109,14 @@ if __name__ == '__main__':
         log_dir = '{}{}/'.format(AWS_DIR_INFO['log'], APP_INFO['name'])
         pipeCreateDir = """
             app_root={1}
-            if [ -d $app_root ]
+            #if [ -d $app_root ]
+            #then
+            #    rm -rf $app_root
+            #fi
+            if [ ! -d $app_root ]
             then
-                rm -rf $app_root
+                git clone {0}
             fi
-            git clone {0}
             
             # pre-submit check
             . .bashrc   # set env var
