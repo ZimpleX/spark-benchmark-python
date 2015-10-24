@@ -8,6 +8,9 @@ more concise with regard to directory formatting
 also note that the policy regarding data set is:
     never overwrite a data set file again --> to ensure that different runs of benchmark use the same data set
 
+data set size for reference:
+    in-3-out-1, with 12 digits of precision: 2.4G for 2^25 entries
+
 
 adapted from original version:
     https://github.com/ZimpleX/spark-benchmark-python/blob/500b285aca981ccc4b817d0e5364d0bcd737735e/LogReg/DataGen.py

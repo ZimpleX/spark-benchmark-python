@@ -88,7 +88,7 @@ def parseArg():
             required=True, help="file name of training data set\
                     \n[NOTE]: use absolute path, can either be file://... or hdfs://...")
     parser.add_argument('-i', '--iteration', type=int, metavar='ITR',
-            default=100, help="max num of itr to do the log reg")
+            default=10, help="max num of itr to do the log reg")
     parser.add_argument('-w', '--weight', type=float, metavar='W',
             default=0., help='initial weight')
     parser.add_argument('-b', '--bias', type=float, metavar='B',
