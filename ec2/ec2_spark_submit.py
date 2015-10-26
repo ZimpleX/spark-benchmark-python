@@ -118,6 +118,8 @@ if __name__ == '__main__':
                 git clone {0}
             fi
             
+            # sudo yum install aws-cli
+
             # pre-submit check
             . .bashrc   # set env var
             py3_path=$(which python3)
@@ -147,7 +149,7 @@ if __name__ == '__main__':
             #############################
             cd spark-benchmark-python/  #
             #############################
-            python3 -m util.data_generator
+            #python3 -m util.data_generator
 
             ############
             cd /root/  #
@@ -184,7 +186,7 @@ if __name__ == '__main__':
             echo $data_file
             echo $master_dns
             echo $submit_main
-            PYSPARK_PYTHON=$(which python3) ./bin/spark-submit --master spark://$master_dns:7077 $submit_main -f $data_file
+            #PYSPARK_PYTHON=$(which python3) ./bin/spark-submit --master spark://$master_dns:7077 $submit_main -f $data_file
 
             logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,

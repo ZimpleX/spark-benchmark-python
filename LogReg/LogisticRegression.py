@@ -121,7 +121,7 @@ if __name__ == "__main__":
     print("Initial cost is:\n{}".format(cost))
 
     for itr in range(conf.itrMax):
-        if (itr % 10 == 0):
+        if (itr % 1 == 0):
             cost = data.pts.map(lambda p: \
                 cf.costFunctionSqrErr(p[1], p[0], weight)) \
                 .reduce(lambda c1, c2: c1 + c2)
