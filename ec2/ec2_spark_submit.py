@@ -11,7 +11,7 @@ import re
 import json
 import pdb
 
-
+# TODO: update AMI with aws-cli
 
 DEFAULT_CREDENTIAL = '../EC2-credential/zimplex0-credentials.csv'
 DEFAULT_IDENTITY = '../EC2-credential/zimplex0-key-pair-ap-southeast-1.pem'
@@ -19,6 +19,8 @@ DEFAULT_REGION = 'ap-southeast-1'
 DEFAULT_CLUSTER_NAME = 'unnamed_cluster'
 
 OUTPUT_FORMAT = 'json'  # don't change this
+CREDENTIAL_EC2 = '/root/zimplex0-credentials.csv'
+
 
 # all dir are info on the Amazon AWS, not the local machine that this script resides
 # directories keywords:
@@ -104,10 +106,30 @@ if __name__ == '__main__':
     #  login to master node and prepare for submit  #
     #################################################
     try:
+        # at this point, master is made sure to be launched
+        # copy secret files to master node (don't include them in AMI)
+        # TODO: may need some clean-up (e.g.: ec2/ec2.bashrc)
+        scpScript = """
+            identity={}
+            master_dns={}
+            scp -i $identity {} root@$master_dns:/
+            scp -i $identity {} root@$master_dns:/
+        """.format(args.identity, master_dns, args.credential_file, 'ec2/ec2.bashrc')
+        stdout, stderr = runScript(scpScript, [], output_opt='display', input_opt='display')
+
         app_root = APP_INFO['repo_url'].split('/')[-1].split('.git')[0]
         submit_main = '/root/{}/{}'.format(app_root, APP_INFO['submit_main'])
         log_dir = '{}{}/'.format(AWS_DIR_INFO['log'], APP_INFO['name'])
         pipeCreateDir = """
+            credential_file={7}
+            ACCESS_KEY_ID=$(cat $credential_file | awk 'NR==2' | awk -F ',' '{{print $(NF-1)}}')
+            SECRET_ACCESS_KEY=$(cat $credential_file | awk 'NR==2' | awk -F ',' '{{print $NF}}')
+            export AWS_SECRET_ACCESS_KEY=$SECRET_ACCESS_KEY
+            export AWS_ACCESS_KEY_ID=$ACCESS_KEY_ID
+
+            # need to set credential for S3 here
+            hdfs_dir=''
+
             app_root={1}
             #if [ -d $app_root ]
             #then
@@ -190,7 +212,8 @@ if __name__ == '__main__':
 
             logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
-                AWS_DIR_INFO['spark'], AWS_DIR_INFO['data']+'08', master_dns)
+                AWS_DIR_INFO['spark'], AWS_DIR_INFO['data']+'08', master_dns,
+                CREDENTIAL_EC2)
 
         stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login {} --pipe' \
                 .format(args.cluster_name), [], 

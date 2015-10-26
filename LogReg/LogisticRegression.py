@@ -11,7 +11,30 @@ import operator as op
 import os
 import argparse
 
-sc = SparkContext(appName="logistic regression v0")
+def parseArg():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file', type=str, metavar='PATHTODATASET',
+            required=True, help="file name of training data set\
+                    \n[NOTE]: use absolute path, can either be file://... or hdfs://...")
+    parser.add_argument('-i', '--iteration', type=int, metavar='ITR',
+            default=10, help="max num of itr to do the log reg")
+    parser.add_argument('-w', '--weight', type=float, metavar='W',
+            default=0., help='initial weight')
+    parser.add_argument('-b', '--bias', type=float, metavar='B',
+            default=0., help='initial bias (threshold)')
+    parser.add_argument('-r', '--rate', type=float, metavar='R',
+            default=0.01, help='learning rate for updating weight')
+    return parser.parse_args()
+
+# call it here to get info for setting appName
+args = parseArg()
+
+f_size = args.file.split('/')[-1]
+f_scheme = 'hdfs'
+if '://' in args.file:
+    f_scheme = args.file.split('://')[0]
+
+sc = SparkContext(appName="LogReg_sch-{}-size-{}-itr-{}".format(f_scheme, f_size, args.iteration))
 sc.addPyFile(os.path.join(os.path.dirname(__file__), "util/CalcFunc.py"))
 sc.addPyFile(os.path.join(os.path.dirname(__file__), "share/conf.py"))
 """
@@ -82,24 +105,9 @@ class Data:
                 np.array([float(x[i + 1]) for i in range(len(x) - 1)])])
 
 
-def parseArg():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', type=str, metavar='PATHTODATASET',
-            required=True, help="file name of training data set\
-                    \n[NOTE]: use absolute path, can either be file://... or hdfs://...")
-    parser.add_argument('-i', '--iteration', type=int, metavar='ITR',
-            default=10, help="max num of itr to do the log reg")
-    parser.add_argument('-w', '--weight', type=float, metavar='W',
-            default=0., help='initial weight')
-    parser.add_argument('-b', '--bias', type=float, metavar='B',
-            default=0., help='initial bias (threshold)')
-    parser.add_argument('-r', '--rate', type=float, metavar='R',
-            default=0.01, help='learning rate for updating weight')
-    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    args = parseArg()
     data = Data(args.file, sc)
     # TODO: should put persist here or in Data.setupDataVector ??
     data.pts.persist()
