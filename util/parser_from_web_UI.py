@@ -9,12 +9,14 @@
 from bs4 import BeautifulSoup
 import urllib.request as urlreq
 import argparse
+import util.populate_db as popDb
 
 # PROFILE_TABLE_CONF = ['appID', 'benchmark', 'workerNum', 'dataSize', 'nodeType']
 
 PUBLICURL = 'http://{}:8080/'   # format it in argparser
 APPIDLIST = []
 BENCHMARKLIST = []
+TOTALDURATIONLIST = []
 NUMWORKERS = -1
 INSTANCETYPE = ''
 JOBSUBDIR = 'history/{}/jobs/'     # no use now (we are counting stage-wise)
@@ -32,7 +34,7 @@ METRIC_NAME = [ 'Duration',         # computing time
 
 METRIC_COLUMN = ['0Percent', '25Percent', '50Percent', '75Percent', '100Percent']
 
-PROFILE_TABLE_DATA = ['appID', 'instanceType', 'benchmark', 'numWorker', 'dataSize', 'stageID', 
+PROFILE_TABLE_DATA = ['appID', 'instanceType', 'benchmark', 'numWorker', 'dataSize', 'totalDuration', 'stageID', 
         'Duration0', 'Duration25', 'Duration50', 'Duration75', 'Duration100',
         'SchedulerDelay0', 'SchedulerDelay25', 'SchedulerDelay50', 'SchedulerDelay75', 'SchedulerDelay100',
         'TaskDeserializationTime0', 'TaskDeserializationTime25', 'TaskDeserializationTime50', 'TaskDeserializationTime75', 'TaskDeserializationTime100',
@@ -42,6 +44,7 @@ PROFILE_TABLE_DATA = ['appID', 'instanceType', 'benchmark', 'numWorker', 'dataSi
         'PeakExecutionMemory0', 'PeakExecutionMemory25', 'PeakExecutionMemory50', 'PeakExecutionMemory75', 'PeakExecutionMemory100',
         'InputSize0', 'InputSize25', 'InputSize50', 'InputSize75', 'InputSize100']
 
+PROFILE_TABLE_TYPE = ['TEXT', 'TEXT', 'TEXT', 'INTEGER', 'REAL', 'REAL', 'INTEGER'] + ['REAL']*40
 
 def parseArg():
     parser = argparse.ArgumentParser("parse data into db from spark web UI of clusters")
@@ -54,6 +57,22 @@ def parseArg():
     parser.add_argument('-i', '--instanceType', type=str, metavar='INSTANCETYPE',
             default='t2.large', help="type of EC2 instance of the cluster")
     return parser.parse_args()
+
+
+# Util:
+def formatTime(timeStr):
+    """
+    format time to be 'second':
+        recognize 'ms' / 'mS' / 'min' / 'Min'
+    """
+    unit = timeStr.split()[-1]
+    val = float(timeStr.split()[0])
+    if unit == 'ms' or unit == 'mS':
+        return val*0.001
+    elif unit == 'min' or unit == 'Min':
+        return val*60.
+    else:
+        return val
 
 
 
@@ -72,11 +91,14 @@ if __name__ == '__main__':
     else:
         APPIDLIST = []
         BENCHMARKLIST = []
+        TOTALDURATIONLIST = []
         for appNum in range(0, args.recentApp):
             tempApp = soup_pub.find_all('table', class_='table table-bordered table-condensed table-striped sortable')[-1] \
             .tbody.findAll('tr')[appNum]
             APPIDLIST += [tempApp.findAll('td')[0].a.get_text()]
             BENCHMARKLIST += [tempApp.findAll('td')[1].a.get_text()]
+            TOTALDURATIONLIST += [formatTime(tempApp.findAll('td')[-1].get_text())]
+
     print('num workers: {}'.format(NUMWORKERS))
     print('appID: {}'.format(APPIDLIST))
     print('bmID: {}'.format(BENCHMARKLIST))
@@ -85,6 +107,8 @@ if __name__ == '__main__':
     for app_id in APPIDLIST:
         stageMetaURL = PUBLICURL + STAGESUBDIR.format(app_id)
         curBenchmark = BENCHMARKLIST[appCount]
+        curDataSize = int(curBenchmark.split('-size-')[-1][0:2])
+        curTotDur = TOTALDURATIONLIST[appCount]
         # get total num of stages
         r = urlreq.urlopen(stageMetaURL)
         soup = BeautifulSoup(r)
@@ -102,25 +126,24 @@ if __name__ == '__main__':
             
             allMetric = soup_table.findAll('tr')
             metric_count = 0
+
+            dataEntry = [app_id, INSTANCETYPE, curBenchmark, NUMWORKERS, curDataSize, curTotDur, stage_id]
             for metric in allMetric:
                 print(METRIC_NAME[metric_count])
                 metric = metric.findAll('td')[1:]
                 for val_txt in metric:
-                    val = float(val_txt.get_text().split()[0])
+                    val = val_txt.get_text().split()[0]
                     unit = val_txt.get_text().split()[1]    # the list can be more than 2 elements
-                    if unit[0] == 'm':
-                        unit = unit[1:]
-                        val *= 0.001
-                    elif unit[0] == 'M':
-                        unit = unit[1:]
-                        val *= 1000000.
-                    elif unit[0] == 'k' or unit[0] == 'K':
-                        unit = unit[1:]
-                        val *= 1000.
-                    elif unit[0] == 'G' or unit[0] == 'g':
-                        unit = unit[1:]
-                        val *= 1000000000.
-                    print("val: {} unit: {}".format(val, unit))
+                    val = formatTime('{} {}'.format(val, unit))
+                    if unit[-1] == 'B':
+                        if unit[0] == 'k' or unit[0] == 'K':
+                            val *= 1000.
+                        elif unit[0] == 'm' or unit[0] == 'M':
+                            val *= 1000000.
+                        elif unit[0] == 'g' or unit[0] == 'G':
+                            val *= 1000000000.
+                    dataEntry += [val]
+                    # print("val: {}".format(val))
                 metric_count += 1
-
+            popDb.populate_db(PROFILE_TABLE_DATA, PROFILE_TABLE_TYPE, dataEntry)
         appCount += 1
