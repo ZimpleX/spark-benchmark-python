@@ -50,10 +50,10 @@ METRIC_PERCENT = [0, 25, 50, 75, 100]
 ###########################
 
 # appID serve as the primary key to join tables
-TABLE_META_DATA = [ '[app ID]', '[instance type]', '[num worker]', '[benchmark]', 
-                    '[data size]', '[total duration (sec)]']
-TABLE_DETAIL1_DATA = ['[app ID]', '[stage ID]', '[metric name]', '[metric val (sec/byte)]', '[value percent(%)]']    # design metric name to be column rather than row to facilitate plotting
-TABLE_DETAIL2_DATA = ['[app ID]', '[stage ID]', '[executor max ID]', '[executor failed]']
+TABLE_META_DATA = [ '[app_ID]', '[instance_type]', '[num_worker]', '[benchmark]', 
+                    '[data_size]', '[total_duration_(sec)]']
+TABLE_DETAIL1_DATA = ['[app_ID]', '[stage_ID]', '[metric_name]', '[metric_val_(sec/byte)]', '[value_percent(%)]']    # design metric name to be column rather than row to facilitate plotting
+TABLE_DETAIL2_DATA = ['[app_ID]', '[stage_ID]', '[executor_max_ID]', '[executor_failed]']
 
 
 TABLE_META_TYPE = ['TEXT', 'TEXT', 'INTEGER', 'TEXT', 'INTEGER', 'REAL']
@@ -142,6 +142,7 @@ if __name__ == '__main__':
         curDataSize = -1
         if len(curBenchmark.split('-size-')) == 2:
             curDataSize = int(curBenchmark.split('-size-')[-1][0:2])
+            curBenchmark = curBenchmark.split('-size-')[0] + curBenchmark.split('-size-')[-1][2:]
         else:
             curDataSize = curDSizeFromDefault
             curDSizeFromDefault -= 1
