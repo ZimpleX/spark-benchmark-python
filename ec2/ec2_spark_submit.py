@@ -140,10 +140,10 @@ if __name__ == '__main__':
                 mkdir $log_dir
             fi
             app_root={1}
-            #if [ -d $app_root ]
-            #then
-            #    rm -rf $app_root
-            #fi
+            if [ -d $app_root ]
+            then
+                rm -rf $app_root
+            fi
             if [ ! -d $app_root ]
             then
                 git clone {0}
