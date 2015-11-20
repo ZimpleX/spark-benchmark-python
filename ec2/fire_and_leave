@@ -2,16 +2,17 @@
 set -eu
 # to be executed on ec2
 
-master_dns=$0
-dsize_start=$1
-dsize_end=$2
-bm_choice=$3
-submit_main=$4
+master_dns=$1
+dsize_start=$2
+dsize_end=$3
+bm_choice=$4
+submit_main=$5
 
 hdfs_dir='/root/ephemeral-hdfs/bin/'
 
+touch /root/haha
 # sweep all data files
-for dsize in $(eval echo "{{$dsize_start..$dsize_end}}")
+for dsize in $(eval echo "{$dsize_start..$dsize_end}")
 do
     # add new data set
     data_file=/$dsize
