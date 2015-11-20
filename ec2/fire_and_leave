@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+# set -eu
 # to be executed on ec2
 
 master_dns=$1
