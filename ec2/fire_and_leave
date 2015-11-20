@@ -9,6 +9,7 @@ bm_choice=$4
 submit_main=$5
 
 hdfs_dir='/root/ephemeral-hdfs/bin/'
+spark_dir='/root/spark/'
 
 touch /root/haha
 # sweep all data files
@@ -25,6 +26,7 @@ do
         s3bkt='logreg25'
     fi
     $hdfs_dir/hadoop distcp s3n://$s3bkt/$dsize hdfs://
+    cd $spark_dir
     if [ "$bm_choice" == "kmean" ]
     then
         ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.ml.JavaKMeansExample lib/spark-examples-1.5.0-hadoop1.2.1.jar $data_file 2
