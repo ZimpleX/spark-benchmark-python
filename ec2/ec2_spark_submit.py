@@ -30,7 +30,8 @@ CREDENTIAL_EC2 = '/root/zimplex0-credentials.csv'
 AWS_DIR_INFO = {    #default value
         'spark': '/root/spark/',
         'log': '/root/bm-log/',
-        'data': 'file:///root/spark-benchmark-python/LogReg/training-data-set/Sigmoid_in-3-out-1/'
+        'data': '/25'
+        # 'data': 'file:///root/spark-benchmark-python/LogReg/training-data-set/Sigmoid_in-3-out-1/'
 }
 
 # some additional information about the application
@@ -112,9 +113,9 @@ if __name__ == '__main__':
         scpScript = """
             identity={}
             master_dns={}
-            scp -i $identity {} root@$master_dns:/
-            scp -i $identity {} root@$master_dns:/
-        """.format(args.identity, master_dns, args.credential_file, 'ec2/ec2.bashrc')
+            scp -i $identity {} root@$master_dns:/root/
+            scp -i $identity {} root@$master_dns:/root/
+        """.format(args.identity_file, master_dns, args.credential_file, 'ec2/ec2.bashrc')
         stdout, stderr = runScript(scpScript, [], output_opt='display', input_opt='display')
 
         app_root = APP_INFO['repo_url'].split('/')[-1].split('.git')[0]
@@ -128,8 +129,16 @@ if __name__ == '__main__':
             export AWS_ACCESS_KEY_ID=$ACCESS_KEY_ID
 
             # need to set credential for S3 here
-            hdfs_dir=''
-
+            hdfs_dir='/root/ephemeral-hdfs/bin/'
+            # start hadoop to copy data from s3 later
+            $hdfs_dir/start-all.sh
+            
+            # set up log dir
+            log_dir=/tmp/spark-events
+            if [ ! -d $log_dir ]
+            then
+                mkdir $log_dir
+            fi
             app_root={1}
             #if [ -d $app_root ]
             #then
@@ -140,8 +149,6 @@ if __name__ == '__main__':
                 git clone {0}
             fi
             
-            # sudo yum install aws-cli
-
             # pre-submit check
             . .bashrc   # set env var
             py3_path=$(which python3)
@@ -155,8 +162,10 @@ if __name__ == '__main__':
             launch_dir=$(pwd)
             log_dir={3}
             spark_dir={4}
-            data_file={5}
+            data_file={5} # it is now overwritten in the spark-submit loop
             master_dns={6}
+            dsize_start={8}
+            dsize_end={9}
 
             echo $launch_dir
             if [ ! -d ${{launch_dir}}/bm-log ]
@@ -208,13 +217,40 @@ if __name__ == '__main__':
             echo $data_file
             echo $master_dns
             echo $submit_main
-            #PYSPARK_PYTHON=$(which python3) ./bin/spark-submit --master spark://$master_dns:7077 $submit_main -f $data_file
+            
+            bm_choice='kmean'
 
-            logout
+            # sweep all data files
+            for dsize in $(eval echo "{{$dsize_start..$dsize_end}}")
+            do
+                # add new data set
+                data_file=/$dsize
+                echo $data_file
+                s3bkt=''
+                if [ "$bm_choice" == "kmean" ]
+                then
+                    s3bkt='kmeans-example'
+                else
+                    s3bkt='logreg25'
+                fi
+                $hdfs_dir/hadoop distcp s3n://$s3bkt/$dsize hdfs://
+                if [ "$bm_choice" == "kmean" ]
+                then
+                    ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.ml.JavaKMeansExample lib/spark-examples-1.5.0-hadoop1.2.1.jar $data_file 2
+                else
+                    PYSPARK_PYTHON=$(which python3) ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true $submit_main -f $data_file | tee output.log
+                fi
+                # remove data_file here
+                $hdfs_dir/hadoop fs -rm $data_file
+            done
+           logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
-                AWS_DIR_INFO['spark'], AWS_DIR_INFO['data']+'08', master_dns,
-                CREDENTIAL_EC2)
+                AWS_DIR_INFO['spark'], AWS_DIR_INFO['data'], master_dns,
+                CREDENTIAL_EC2, '05', '26')
 
+        # ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.SparkPi /root/spark/lib/spark-examples-1.5.0-hadoop1.2.1.jar
+        # ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.ml.JavaKMeansExample /root/spark/lib/spark-examples-1.5.0-hadoop1.2.1.jar file:///root/spark/data/mllib/kmeans_data.txt 2
+ 
         stdout, stderr = runScript('python3 -m ec2.ec2_spark_launcher --login {} --pipe' \
                 .format(args.cluster_name), [], 
                 output_opt='display', input_opt='pipe', input_pipe=[pipeCreateDir, '.quit'])
