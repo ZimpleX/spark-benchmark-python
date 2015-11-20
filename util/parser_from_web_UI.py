@@ -11,7 +11,14 @@ import urllib.request as urlreq
 import argparse
 import util.populate_db as popDb
 
+##########
+#  META  #
+##########
+
 # PROFILE_TABLE_CONF = ['appID', 'benchmark', 'workerNum', 'dataSize', 'nodeType']
+UNDEFINED = -1
+
+DEFAULTDATAMAX = 26
 
 PUBLICURL = 'http://{}:8080/'   # format it in argparser
 APPIDLIST = []
@@ -23,28 +30,40 @@ JOBSUBDIR = 'history/{}/jobs/'     # no use now (we are counting stage-wise)
 STAGESUBDIR = 'history/{}/stages/'  # format with app-id
 STAGEDETAILSUBDIR = 'stage/?id={}&attempt=0' # append this to STAGESUBDIR
 
+# this is no use (I am reading metric name directly from web UI)
 METRIC_NAME = [ 'Duration',         # computing time
-                'SchedulerDelay',   # IO delay ??
-                'TaskDeserializationTime',
-                'GCTime',
-                'ResultSerializationTime',
-                'GettingResultTime',
-                'PeakExecutionMemory',
-                'InputSize']        # NOTE: i am not considering Record metric currently
+                'Scheduler Delay',   # IO delay ??
+                'Task Deserialization Time',
+                'GC Time',
+                'Result Serialization Time',
+                'Getting Result Time',
+                'Peak Execution Memory',
+                'Input Size',
+                'Shuffle Read Size',
+                'Shuffle Read Blocked Time',
+                'Shuffle Remote Reads']        # NOTE: i am not considering Record metric currently
 
-METRIC_COLUMN = ['0Percent', '25Percent', '50Percent', '75Percent', '100Percent']
+METRIC_PERCENT = [0, 25, 50, 75, 100]
 
-PROFILE_TABLE_DATA = ['appID', 'instanceType', 'benchmark', 'numWorker', 'dataSize', 'totalDuration', 'stageID', 
-        'Duration0', 'Duration25', 'Duration50', 'Duration75', 'Duration100',
-        'SchedulerDelay0', 'SchedulerDelay25', 'SchedulerDelay50', 'SchedulerDelay75', 'SchedulerDelay100',
-        'TaskDeserializationTime0', 'TaskDeserializationTime25', 'TaskDeserializationTime50', 'TaskDeserializationTime75', 'TaskDeserializationTime100',
-        'GCTime0', 'GCTime25', 'GCTime50', 'GCTime75', 'GCTime100',
-        'ResultSerializationTime0', 'ResultSerializationTime25', 'ResultSerializationTime50', 'ResultSerializationTime75', 'ResultSerializationTime100',
-        'GettingResultTime0', 'GettingResultTime25', 'GettingResultTime50', 'GettingResultTime75', 'GettingResultTime100',
-        'PeakExecutionMemory0', 'PeakExecutionMemory25', 'PeakExecutionMemory50', 'PeakExecutionMemory75', 'PeakExecutionMemory100',
-        'InputSize0', 'InputSize25', 'InputSize50', 'InputSize75', 'InputSize100']
+###########################
+#  profiler table design  #
+###########################
 
-PROFILE_TABLE_TYPE = ['TEXT', 'TEXT', 'TEXT', 'INTEGER', 'REAL', 'REAL', 'INTEGER'] + ['REAL']*40
+# appID serve as the primary key to join tables
+TABLE_META_DATA = [ '[app ID]', '[instance type]', '[num worker]', '[benchmark]', 
+                    '[data size]', '[total duration (sec)]']
+TABLE_DETAIL1_DATA = ['[app ID]', '[stage ID]', '[metric name]', '[metric val (sec/byte)]', '[value percent(%)]']    # design metric name to be column rather than row to facilitate plotting
+TABLE_DETAIL2_DATA = ['[app ID]', '[stage ID]', '[executor max ID]', '[executor failed]']
+
+
+TABLE_META_TYPE = ['TEXT', 'TEXT', 'INTEGER', 'TEXT', 'INTEGER', 'REAL']
+TABLE_DETAIL1_TYPE = ['TEXT', 'INTEGER', 'TEXT', 'REAL', 'INTEGER']
+TABLE_DETAIL2_TYPE = ['TEXT', 'INTEGER', 'INTEGER', 'INTEGER']
+
+
+################
+#  arg parser  #
+################
 
 def parseArg():
     parser = argparse.ArgumentParser("parse data into db from spark web UI of clusters")
@@ -59,7 +78,10 @@ def parseArg():
     return parser.parse_args()
 
 
-# Util:
+##########
+#  Util  #
+##########
+
 def formatTime(timeStr):
     """
     format time to be 'second':
@@ -75,6 +97,9 @@ def formatTime(timeStr):
         return val
 
 
+##########
+#  main  #
+##########
 
 if __name__ == '__main__':
     args = parseArg()
@@ -104,34 +129,72 @@ if __name__ == '__main__':
     print('bmID: {}'.format(BENCHMARKLIST))
 
     appCount = 0
+    curDSizeFromDefault = DEFAULTDATAMAX
+
     for app_id in APPIDLIST:
+        ###############
+        #  enter app  #
+        ###############
         stageMetaURL = PUBLICURL + STAGESUBDIR.format(app_id)
         curBenchmark = BENCHMARKLIST[appCount]
-        curDataSize = int(curBenchmark.split('-size-')[-1][0:2])
+        curDataSize = -1
+        if len(curBenchmark.split('-size-')) == 2:
+            curDataSize = int(curBenchmark.split('-size-')[-1][0:2])
+        else:
+            curDataSize = curDSizeFromDefault
+            curDSizeFromDefault -= 1
         curTotDur = TOTALDURATIONLIST[appCount]
+        # populate meta table
+        tableEntryMeta = [app_id, INSTANCETYPE, NUMWORKERS, curBenchmark, curDataSize, curTotDur]
+        print('tableEntryMeta: {}'.format(tableEntryMeta))
+        popDb.populate_db(TABLE_META_DATA, TABLE_META_TYPE, tableEntryMeta, table_name='meta|meta')
+        print('meta: {}'.format(tableEntryMeta))
         # get total num of stages
         r = urlreq.urlopen(stageMetaURL)
         soup = BeautifulSoup(r)
         numStages = int(soup.find_all('li', id='completed-summary')[0].get_text().split(':')[-1])
 
-        # 
         stageDetailURL = stageMetaURL + STAGEDETAILSUBDIR
         print(stageDetailURL)
+        preIdMax = -1
         for stage_id in range(0, numStages):
+            #################
+            #  enter stage  #
+            #################
+            print('stage: {}'.format(stage_id))
             r = urlreq.urlopen(stageDetailURL.format(stage_id))
             soup = BeautifulSoup(r)
-            soup_t = soup.find_all("table", id="task-summary-table")
-            assert len(soup_t) == 1
-            soup_table = soup_t[0]
+            soup_table = soup.find_all("table", id="task-summary-table")[0]
             
             allMetric = soup_table.findAll('tr')
-            metric_count = 0
 
-            dataEntry = [app_id, INSTANCETYPE, curBenchmark, NUMWORKERS, curDataSize, curTotDur, stage_id]
+            tableEntryDetail1_pre = [app_id, stage_id]
+            tableEntryDetail2_pre = [app_id, stage_id]
+            # populate detail2 table
+            soup_exe = soup.find_all('table', class_='table table-bordered table-condensed table-striped')[0].tbody.findAll('tr')
+            curIdMax = UNDEFINED
+            curFailed = UNDEFINED
+            for s_exe in soup_exe:
+                curId = int(s_exe.findAll('td')[0].get_text())
+                print('exe: {}'.format(s_exe))
+                curIdMax = curId > curIdMax and curId or curIdMax
+            if preIdMax == UNDEFINED:
+                curFailed = 0
+            else:
+                curFailed = curIdMax - preIdMax
+            preIdMax = curIdMax
+            tableEntryDetail2 = tableEntryDetail2_pre + [curIdMax, curFailed]
+            popDb.populate_db(TABLE_DETAIL2_DATA, TABLE_DETAIL2_TYPE, tableEntryDetail2, table_name='detail2|detail2')
+
             for metric in allMetric:
-                print(METRIC_NAME[metric_count])
+                ##################
+                #  sweep metric  #
+                ##################
+                metricName = metric.findAll('td')[0].get_text()
                 metric = metric.findAll('td')[1:]
+                valPerCount = -1    # keep record of what percent is the current metric value
                 for val_txt in metric:
+                    valPerCount += 1
                     val = val_txt.get_text().split()[0]
                     unit = val_txt.get_text().split()[1]    # the list can be more than 2 elements
                     val = formatTime('{} {}'.format(val, unit))
@@ -142,8 +205,8 @@ if __name__ == '__main__':
                             val *= 1000000.
                         elif unit[0] == 'g' or unit[0] == 'G':
                             val *= 1000000000.
-                    dataEntry += [val]
+                    # populate detail1 table
+                    tableEntryDetail1 = tableEntryDetail1_pre + [metricName, val, METRIC_PERCENT[valPerCount]]
+                    popDb.populate_db(TABLE_DETAIL1_DATA, TABLE_DETAIL1_TYPE, tableEntryDetail1, table_name='detail1|detail1')
                     # print("val: {}".format(val))
-                metric_count += 1
-            popDb.populate_db(PROFILE_TABLE_DATA, PROFILE_TABLE_TYPE, dataEntry)
         appCount += 1
