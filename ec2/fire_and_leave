@@ -13,6 +13,9 @@ spark_dir='/root/spark/'
 
 touch /root/haha
 # sweep all data files
+echo $dsize_start >> /root/haha
+echo $dsize_end >> /root/haha
+
 for dsize in $(eval echo "{$dsize_start..$dsize_end}")
 do
     touch /root/haha0
