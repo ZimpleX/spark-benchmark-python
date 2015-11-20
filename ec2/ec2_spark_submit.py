@@ -11,7 +11,8 @@ import re
 import json
 import pdb
 
-# TODO: update AMI with aws-cli
+
+BENCHMARK_SET = ['kmean', 'logreg']
 
 DEFAULT_CREDENTIAL = '../EC2-credential/zimplex0-credentials.csv'
 DEFAULT_IDENTITY = '../EC2-credential/zimplex0-key-pair-ap-southeast-1.pem'
@@ -53,7 +54,8 @@ def parseArgs():
             default=DEFAULT_REGION, help='region where clusters located in')
     parser.add_argument('-n', '--cluster_name', type=str, metavar='CLUSTER_NAME', 
             default=DEFAULT_CLUSTER_NAME, help='name of the ec2 cluster')
-
+    parser.add_argument('-b', '--benchmark', type=str, metavar='BENCHMARK',
+            choices=BENCHMARK_SET, help='input the benchmark name you want to submit to cluster')
     return parser.parse_args()
 
 
@@ -218,14 +220,14 @@ if __name__ == '__main__':
             echo $master_dns
             echo $submit_main
             
-            bm_choice='kmean'
+            bm_choice={10}
             
             chmod 111 /root/spark-benchmark-python/ec2/fire_and_leave
             /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
            logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
                 AWS_DIR_INFO['spark'], AWS_DIR_INFO['data'], master_dns,
-                CREDENTIAL_EC2, '05', '26')
+                CREDENTIAL_EC2, '05', '26', args.benchmark)
 
         # ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.SparkPi /root/spark/lib/spark-examples-1.5.0-hadoop1.2.1.jar
         # ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.ml.JavaKMeansExample /root/spark/lib/spark-examples-1.5.0-hadoop1.2.1.jar file:///root/spark/data/mllib/kmeans_data.txt 2
