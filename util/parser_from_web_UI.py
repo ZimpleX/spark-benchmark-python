@@ -93,6 +93,8 @@ def formatTime(timeStr):
         return val*0.001
     elif unit == 'min' or unit == 'Min':
         return val*60.
+    elif unit == 'h':
+        return val*3600.
     else:
         return val
 
