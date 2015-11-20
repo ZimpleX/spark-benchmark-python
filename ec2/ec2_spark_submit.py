@@ -226,6 +226,7 @@ if __name__ == '__main__':
             bm_choice={10}
             job_type={11}
             chmod 111 /root/spark-benchmark-python/ec2/fire_and_leave
+            chmod 111 /root/spark-benchmark-python/util/parse_and_leave
             if [ $job_type == 'bm' ]
             then
                 /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
