@@ -4,13 +4,16 @@ parent_dir=/root/spark-benchmark-python/
 
 cd $parent_dir
 
-. /root/.bashrc
-
+python3=/root/anaconda3/bin/python3
 while read conf
 do
-    python3 -m util.parser_from_web_UI -u `echo $conf | awk '{print $2}'` -n `echo $conf | awk '{print $1}'`
+    $python3 -m util.parser_from_web_UI -u `echo $conf | awk '{print $2}'` -n `echo $conf | awk '{print $1}'`
 done < profile_data/parser.conf
 
 new_db=$(date +%s).db
 mv profile_data/ec2_spark.db profile_data/$new_db
+
+credential_file=/root/zimplex0-credentials.csv
+export AWS_ACCESS_KEY_ID=$(cat $credential_file | awk 'NR==2' | awk -F ',' '{print $(NF-1)}')
+export AWS_SECRET_ACCESS_KEY=$(cat $credential_file | awk 'NR==2' | awk -F ',' '{print $NF}')
 aws s3 cp profile_data/$new_db s3://spark-ec2-log/
