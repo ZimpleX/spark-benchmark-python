@@ -231,7 +231,7 @@ if __name__ == '__main__':
             then
                 /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
             else
-                /root/spark-benchmark-python/util/parse_and_leave &
+                nohup /root/spark-benchmark-python/util/parse_and_leave &
             fi
             logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
