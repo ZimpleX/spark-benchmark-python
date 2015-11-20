@@ -1,0 +1,16 @@
+#!/bin/bash
+
+parent_dir=/root/spark-benchmark-python/
+
+cd $parent_dir
+
+. /root/.bashrc
+
+while read conf
+do
+    python3 -m util.parser_from_web_UI -u `echo $conf | awk '{print $1}'` -n `echo $conf | awk '{print $2}'`
+done < profile_data/parser.conf
+
+new_db=$(date +%s).db
+mv profile_data/ec2_spark.db profile_data/$new_db
+aws s3 cp profile_data/$new_db s3://spark-ec2-log/

@@ -56,6 +56,9 @@ def parseArgs():
             default=DEFAULT_CLUSTER_NAME, help='name of the ec2 cluster')
     parser.add_argument('-b', '--benchmark', type=str, metavar='BENCHMARK',
             choices=BENCHMARK_SET, help='input the benchmark name you want to submit to cluster')
+    parser.add_argument('-t', '--job_type', type=str, metavar='JBTYP',
+            default='bm', choices=['bm', 'parser'], help='do you want tto launch bm or just collect data')
+    
     return parser.parse_args()
 
 
@@ -221,13 +224,18 @@ if __name__ == '__main__':
             echo $submit_main
             
             bm_choice={10}
-            
+            job_type={11}
             chmod 111 /root/spark-benchmark-python/ec2/fire_and_leave
-            /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
-           logout
+            if [ $job_type == 'bm' ]
+            then
+                /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
+            else
+                /root/spark-benchmark-python/util/parse_and_leave &
+            fi
+            logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
                 AWS_DIR_INFO['spark'], AWS_DIR_INFO['data'], master_dns,
-                CREDENTIAL_EC2, '05', '26', args.benchmark)
+                CREDENTIAL_EC2, '05', '26', args.benchmark, args.job_type)
 
         # ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.SparkPi /root/spark/lib/spark-examples-1.5.0-hadoop1.2.1.jar
         # ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.ml.JavaKMeansExample /root/spark/lib/spark-examples-1.5.0-hadoop1.2.1.jar file:///root/spark/data/mllib/kmeans_data.txt 2
