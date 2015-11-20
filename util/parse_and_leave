@@ -8,7 +8,7 @@ cd $parent_dir
 
 while read conf
 do
-    python3 -m util.parser_from_web_UI -u `echo $conf | awk '{print $1}'` -n `echo $conf | awk '{print $2}'`
+    python3 -m util.parser_from_web_UI -u `echo $conf | awk '{print $2}'` -n `echo $conf | awk '{print $1}'`
 done < profile_data/parser.conf
 
 new_db=$(date +%s).db
