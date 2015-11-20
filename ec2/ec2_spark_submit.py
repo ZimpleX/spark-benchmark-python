@@ -219,30 +219,8 @@ if __name__ == '__main__':
             echo $submit_main
             
             bm_choice='kmean'
-
-            # sweep all data files
-            for dsize in $(eval echo "{{$dsize_start..$dsize_end}}")
-            do
-                # add new data set
-                data_file=/$dsize
-                echo $data_file
-                s3bkt=''
-                if [ "$bm_choice" == "kmean" ]
-                then
-                    s3bkt='kmeans-example'
-                else
-                    s3bkt='logreg25'
-                fi
-                $hdfs_dir/hadoop distcp s3n://$s3bkt/$dsize hdfs://
-                if [ "$bm_choice" == "kmean" ]
-                then
-                    ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true --class org.apache.spark.examples.ml.JavaKMeansExample lib/spark-examples-1.5.0-hadoop1.2.1.jar $data_file 2
-                else
-                    PYSPARK_PYTHON=$(which python3) ./bin/spark-submit --master spark://$master_dns:7077 --conf spark.eventLog.enabled=true $submit_main -f $data_file | tee output.log
-                fi
-                # remove data_file here
-                $hdfs_dir/hadoop fs -rm $data_file
-            done
+            
+            /root/spark-benchmark-python/ec2 fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
            logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
                 AWS_DIR_INFO['spark'], AWS_DIR_INFO['data'], master_dns,
