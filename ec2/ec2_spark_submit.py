@@ -220,7 +220,7 @@ if __name__ == '__main__':
             
             bm_choice='kmean'
             
-            /root/spark-benchmark-python/ec2 fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
+            /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
            logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
                 AWS_DIR_INFO['spark'], AWS_DIR_INFO['data'], master_dns,
