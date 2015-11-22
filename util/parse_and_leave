@@ -7,7 +7,7 @@ cd $parent_dir
 python3=/root/anaconda3/bin/python3
 while read conf
 do
-    "$python3 -m util.parser_from_web_UI -u $(echo $conf | awk '{print $3}') -ns $(echo $conf | awk '{print $1}') -ne $(echo $conf | awk '{print $2}')"
+    $python3 -m util.parser_from_web_UI -u $(echo $conf | awk '{print $3}') -s $(echo $conf | awk '{print $1}') -e $(echo $conf | awk '{print $2}')
 done < profile_data/parser.conf
 
 new_db=$(date +%s).db

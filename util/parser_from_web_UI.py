@@ -71,9 +71,9 @@ def parseArg():
             help="public URL of master. NO NEED to provide protocal (http://) and port (8080)")
     parser.add_argument('-a', '--appID', type=str, metavar='APPID',
             default='', help="app id to parse. Can be found on web UI")
-    parser.add_argument('-ns', '--recentAppStart', type=int, metavar='RECENTAPPSTART',
+    parser.add_argument('-s', '--recentAppStart', type=int, metavar='RECENTAPPSTART',
             default=0, help="parse the most recent apps from .. (the entry in the web UI table is 0)\n(this argument will only take effect when appID is not provided)")
-    parser.add_argument('-ne', '--recentAppEnd', type=int, metavar='RECENTAPPEND',
+    parser.add_argument('-e', '--recentAppEnd', type=int, metavar='RECENTAPPEND',
             default=0, help="parse the most recent apps until ..")
     parser.add_argument('-i', '--instanceType', type=str, metavar='INSTANCETYPE',
             default='t2.large', help="type of EC2 instance of the cluster")
