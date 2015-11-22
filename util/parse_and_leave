@@ -1,6 +1,6 @@
 #!/bin/bash
 
-parent_dir=/root/spark-benchmark-python/
+parent_dir='/root/spark-benchmark-python/'
 
 cd $parent_dir
 
