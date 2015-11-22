@@ -229,9 +229,11 @@ if __name__ == '__main__':
             chmod 111 /root/spark-benchmark-python/util/parse_and_leave
             if [ $job_type == 'bm' ]
             then
-                /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main &
+                /root/spark-benchmark-python/ec2/fire_and_leave $master_dns $dsize_start $dsize_end $bm_choice $submit_main
             else
-                nohup /root/spark-benchmark-python/util/parse_and_leave &
+                cd /root/spark-benchmark-python
+                /root/spark-benchmark-python/util/parse_and_leave
+                #disown $!
             fi
             logout
         """.format(APP_INFO['repo_url'], app_root, submit_main, log_dir,
