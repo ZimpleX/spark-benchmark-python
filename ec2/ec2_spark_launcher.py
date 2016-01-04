@@ -20,7 +20,7 @@ DEFAULT_NAME = 'unnamed_cluster'
 
 DEFAULT_EC2_ARGS = {'--instance-type': 't2.micro',
                     '--region': 'ap-southeast-1',
-                    '--ami': 'ami-94ccdfc6'}
+                    '--ami': 'ami-12a66771'}
 DEFAULT_LAUNCH_ARGS = ['--instance-type', 
                        '--region',
                        '--ami']

@@ -28,7 +28,7 @@ import pdb
 
 trainingDirName = 'LogReg/training-data-set/'
 dataSetSizeStart = 3
-dataSizeDefault = 12
+dataSizeDefault = 23
 inputSizeDefault = 3
 outputSizeDefault = 1
 funcDefault = 'Sigmoid'
@@ -85,7 +85,7 @@ def dataGeneratorMain(args):
         outputSize = args.output_size
     dataSetSize = args.data_size
     assert inputSize > 0 and inputSize <= 10
-    assert dataSetSize <= 14 and dataSetSize >= 3
+    assert dataSetSize <= 23 and dataSetSize >= 3
     #################################
     #    format the data set dir    #
     #################################
